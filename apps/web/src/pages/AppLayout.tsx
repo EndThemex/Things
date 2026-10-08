@@ -1,4 +1,4 @@
-import { Layout, Menu, Grid } from "antd";
+import { Layout, Menu, Grid, theme } from "antd";
 import {
   AppstoreOutlined,
   DashboardOutlined,
@@ -23,6 +23,7 @@ export default function AppLayout() {
   const { mode, toggle } = useTheme();
   const screens = Grid.useBreakpoint();
   const isMobile = !screens.md;
+  const { token } = theme.useToken();
 
   const selectedKey =
     NAV_ITEMS.filter((i) => location.pathname.startsWith(i.key))
@@ -67,11 +68,37 @@ export default function AppLayout() {
             style={{
               position: "sticky",
               bottom: 0,
-              borderTop: "1px solid var(--ant-color-split, #f0f0f0)",
-              background: "var(--ant-color-bg-container, #fff)",
+              display: "flex",
+              borderTop: `1px solid ${token.colorSplit}`,
+              background: token.colorBgContainer,
+              paddingBottom: "env(safe-area-inset-bottom)",
             }}
           >
-            <Menu mode="horizontal" {...menuProps} style={{ border: "none" }} disabledOverflow />
+            {NAV_ITEMS.map((item) => {
+              const selected = item.key === selectedKey;
+              return (
+                <div
+                  key={item.key}
+                  role="button"
+                  aria-label={item.label}
+                  onClick={() => navigate(item.key)}
+                  style={{
+                    flex: 1,
+                    display: "flex",
+                    flexDirection: "column",
+                    alignItems: "center",
+                    gap: 2,
+                    padding: "6px 0 4px",
+                    fontSize: 12,
+                    color: selected ? token.colorPrimary : token.colorText,
+                    cursor: "pointer",
+                  }}
+                >
+                  <span style={{ fontSize: 16, lineHeight: 1 }}>{item.icon}</span>
+                  <span>{item.label}</span>
+                </div>
+              );
+            })}
           </nav>
         )}
       </Layout>
