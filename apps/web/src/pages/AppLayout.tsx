@@ -60,7 +60,7 @@ export default function AppLayout() {
             {mode === "dark" ? "🌙" : "☀️"}
           </span>
         </Header>
-        <Content style={{ padding: "0 12px 12px", maxWidth: 960, width: "100%", margin: "0 auto" }}>
+        <Content style={{ padding: "0 12px 12px", maxWidth: 1200, width: "100%", margin: "0 auto" }}>
           <Outlet />
         </Content>
         {isMobile && (

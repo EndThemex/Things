@@ -80,6 +80,8 @@ export default function ComponentFormDrawer({ open, editing, onClose, onSaved }:
     if (!open) return;
     setImagePath(editing?.imagePath ?? null);
     setNewCategory("");
+    // 每次打开先全量重置，避免残留上一次的表单数据
+    form.resetFields();
     form.setFieldsValue(
       editing
         ? {

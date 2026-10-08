@@ -232,7 +232,7 @@ export default function ComponentsPage() {
     {
       title: "图片",
       dataIndex: "imagePath",
-      width: 64,
+      width: 50,
       render: (_: unknown, item: ComponentItem) => thumbnail(item, 40),
     },
     {
@@ -253,12 +253,13 @@ export default function ComponentsPage() {
       title: "分类",
       dataIndex: "categoryName",
       width: 100,
-      render: (v: string | null) => v ?? <Typography.Text type="secondary">未分类</Typography.Text>,
+      render: (v: string | null) =>
+        v ?? <Typography.Text type="secondary">未分类</Typography.Text>,
     },
     {
       title: "数量",
       dataIndex: "quantity",
-      width: 120,
+      width: 110,
       render: (_: unknown, item: ComponentItem) => quantityControl(item),
     },
     {
@@ -294,7 +295,7 @@ export default function ComponentsPage() {
     {
       title: "操作",
       key: "actions",
-      width: 200,
+      width: 190,
       render: (_: unknown, item: ComponentItem) => actionButtons(item),
     },
   ];
@@ -371,9 +372,15 @@ export default function ComponentsPage() {
       title: "分类",
       dataIndex: "categoryName",
       width: 100,
-      render: (v: string | null) => v ?? <Typography.Text type="secondary">未分类</Typography.Text>,
+      render: (v: string | null) =>
+        v ?? <Typography.Text type="secondary">未分类</Typography.Text>,
     },
-    { title: "数量", dataIndex: "quantity", width: 70, align: "right" as const },
+    {
+      title: "数量",
+      dataIndex: "quantity",
+      width: 70,
+      align: "right" as const,
+    },
     {
       title: "删除时间",
       dataIndex: "deletedAt",
@@ -388,15 +395,20 @@ export default function ComponentsPage() {
       title: "剩余天数",
       dataIndex: "daysLeft",
       width: 90,
-      render: (v: number) => <Tag color={v <= 5 ? "error" : "default"}>{v} 天</Tag>,
+      render: (v: number) => (
+        <Tag color={v <= 5 ? "error" : "default"}>{v} 天</Tag>
+      ),
     },
     {
       title: "操作",
       key: "actions",
-      width: 190,
+      width: 180,
       render: (_: unknown, item: TrashItem) => (
         <Space size={0}>
-          <Popconfirm title="还原该元件？" onConfirm={() => restore.mutate(item.id)}>
+          <Popconfirm
+            title="还原该元件？"
+            onConfirm={() => restore.mutate(item.id)}
+          >
             <Button size="small" type="text" icon={<UndoOutlined />}>
               还原
             </Button>
