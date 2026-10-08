@@ -1,0 +1,20 @@
+{
+  "name": "@things/server",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "bun --watch src/index.ts",
+    "start": "bun src/index.ts",
+    "db:migrate": "bun src/db/migrate.ts"
+  },
+  "dependencies": {
+    "@things/web": "workspace:*",
+    "drizzle-orm": "^0.44.0",
+    "hono": "^4.9.0",
+    "zod": "^3.24.0"
+  },
+  "devDependencies": {
+    "@types/bun": "^1.2.0",
+    "drizzle-kit": "^0.31.0"
+  }
+}

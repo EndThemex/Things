@@ -1,0 +1,16 @@
+# deps & builds
+node_modules/
+dist/
+*.tsbuildinfo
+
+# runtime data
+apps/server/data/
+uploads/
+
+# env
+.env
+.env.local
+
+# misc
+.DS_Store
+Thumbs.db
