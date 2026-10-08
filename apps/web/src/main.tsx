@@ -6,7 +6,10 @@ import { ThemeProvider } from "./theme/ThemeProvider";
 import AppLayout from "./pages/AppLayout";
 import Login from "./pages/Login";
 import Settings from "./pages/Settings";
-import { PlaceholderPage } from "./pages/Placeholder";
+import ComponentsPage from "./pages/Components";
+import DashboardPage from "./pages/Dashboard";
+import PlansPage from "./pages/Plans";
+import PlanDetailPage from "./pages/PlanDetail";
 
 const queryClient = new QueryClient({
   defaultOptions: { queries: { retry: 1, refetchOnWindowFocus: false } },
@@ -31,12 +34,10 @@ createRoot(document.getElementById("root")!).render(
                 </RequireAuth>
               }
             >
-              <Route
-                path="/components"
-                element={<PlaceholderPage title="元件库" milestone="M2" />}
-              />
-              <Route path="/dashboard" element={<PlaceholderPage title="看板" milestone="M3" />} />
-              <Route path="/plans" element={<PlaceholderPage title="方案" milestone="M4" />} />
+              <Route path="/components" element={<ComponentsPage />} />
+              <Route path="/dashboard" element={<DashboardPage />} />
+              <Route path="/plans" element={<PlansPage />} />
+              <Route path="/plans/:id" element={<PlanDetailPage />} />
               <Route path="/settings" element={<Settings />} />
             </Route>
             <Route path="*" element={<Navigate to="/components" replace />} />
