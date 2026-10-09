@@ -31,6 +31,7 @@ import {
   UndoOutlined,
 } from "@ant-design/icons";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import type { SorterResult } from "antd/es/table/interface";
 import { api, json } from "../api/client";
 import type { Category, ComponentItem, Paged, Tag as TagItem, TrashItem } from "../types";
 import { formatMoney, formatTime } from "../utils/format";
@@ -41,10 +42,39 @@ import CategoryManageModal from "../components/CategoryManageModal";
 const SORT_OPTIONS = [
   { value: "updated_desc", label: "最近修改" },
   { value: "updated_asc", label: "最早修改" },
-  { value: "name_asc", label: "名称" },
+  { value: "name_asc", label: "名称 A → Z" },
+  { value: "name_desc", label: "名称 Z → A" },
   { value: "quantity_asc", label: "库存少 → 多" },
+  { value: "quantity_desc", label: "库存多 → 少" },
+  { value: "price_asc", label: "单价低 → 高" },
   { value: "price_desc", label: "单价高 → 低" },
 ];
+
+/** 排序字段 → 服务端 sort 参数的映射 */
+const SORT_FIELD_MAP: Record<string, { asc: string; desc: string }> = {
+  name: { asc: "name_asc", desc: "name_desc" },
+  quantity: { asc: "quantity_asc", desc: "quantity_desc" },
+  price: { asc: "price_asc", desc: "price_desc" },
+  updatedAt: { asc: "updated_asc", desc: "updated_desc" },
+};
+
+type SortOrder = "ascend" | "descend" | null;
+
+/** 根据当前 sort 参数计算某列的受控排序方向 */
+function sortOrderFor(sort: string, field: string): SortOrder {
+  const map: Record<string, string> = {
+    name_asc: "name",
+    name_desc: "name",
+    quantity_asc: "quantity",
+    quantity_desc: "quantity",
+    price_asc: "price",
+    price_desc: "price",
+    updated_asc: "updatedAt",
+    updated_desc: "updatedAt",
+  };
+  if (map[sort] !== field) return null;
+  return sort.endsWith("_asc") ? "ascend" : "descend";
+}
 
 export default function ComponentsPage() {
   const { token } = theme.useToken();
@@ -230,6 +260,19 @@ export default function ComponentsPage() {
     </Space>
   );
 
+  /** 表头排序 → 服务端 sort 参数；分页等非排序变更时排序值不变，自动跳过 */
+  const handleTableSort = (sorter: SorterResult<ComponentItem>) => {
+    const field = typeof sorter.field === "string" ? sorter.field : null;
+    if (!field || !SORT_FIELD_MAP[field]) return;
+    const next =
+      sorter.order == null
+        ? "updated_desc" // 第三次点击取消排序，回到默认
+        : SORT_FIELD_MAP[field][sorter.order === "ascend" ? "asc" : "desc"];
+    if (next === sort) return;
+    setSort(next);
+    setPage(1);
+  };
+
   const columns = [
     {
       title: "图片",
@@ -240,6 +283,8 @@ export default function ComponentsPage() {
     {
       title: "名称",
       dataIndex: "name",
+      sorter: true,
+      sortOrder: sortOrderFor(sort, "name"),
       render: (_: unknown, item: ComponentItem) => (
         <div>
           <div style={{ fontWeight: 500 }}>
@@ -271,12 +316,16 @@ export default function ComponentsPage() {
       title: "数量",
       dataIndex: "quantity",
       width: 110,
+      sorter: true,
+      sortOrder: sortOrderFor(sort, "quantity"),
       render: (_: unknown, item: ComponentItem) => quantityControl(item),
     },
     {
       title: "单价",
       dataIndex: "price",
       width: 80,
+      sorter: true,
+      sortOrder: sortOrderFor(sort, "price"),
       render: (v: string | null) => formatMoney(v),
     },
     {
@@ -297,6 +346,8 @@ export default function ComponentsPage() {
       title: "修改时间",
       dataIndex: "updatedAt",
       width: 100,
+      sorter: true,
+      sortOrder: sortOrderFor(sort, "updatedAt"),
       render: (v: string) => (
         <Typography.Text type="secondary" style={{ fontSize: 12 }}>
           {formatTime(v)}
@@ -391,11 +442,14 @@ export default function ComponentsPage() {
       dataIndex: "quantity",
       width: 70,
       align: "right" as const,
+      sorter: (a: TrashItem, b: TrashItem) => a.quantity - b.quantity,
     },
     {
       title: "删除时间",
       dataIndex: "deletedAt",
       width: 110,
+      sorter: (a: TrashItem, b: TrashItem) => a.deletedAt.localeCompare(b.deletedAt),
+      defaultSortOrder: "descend" as const,
       render: (v: string) => (
         <Typography.Text type="secondary" style={{ fontSize: 12 }}>
           {formatTime(v)}
@@ -406,6 +460,7 @@ export default function ComponentsPage() {
       title: "剩余天数",
       dataIndex: "daysLeft",
       width: 90,
+      sorter: (a: TrashItem, b: TrashItem) => a.daysLeft - b.daysLeft,
       render: (v: number) => (
         <Tag color={v <= 5 ? "error" : "default"}>{v} 天</Tag>
       ),
@@ -637,6 +692,9 @@ export default function ComponentsPage() {
           loading={isLoading}
           columns={columns}
           dataSource={data?.items ?? []}
+          onChange={(_pagination, _filters, sorter) =>
+            handleTableSort(Array.isArray(sorter) ? sorter[0] : sorter)
+          }
           locale={{ emptyText: <Empty description="暂无物品，点击右上角「新建物品」录入" image={Empty.PRESENTED_IMAGE_SIMPLE} /> }}
           pagination={{
             current: page,

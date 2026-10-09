@@ -98,7 +98,16 @@ const listQuerySchema = z.object({
   page: z.coerce.number().int().min(1).default(1),
   pageSize: z.coerce.number().int().min(1).max(100).default(20),
   sort: z
-    .enum(["updated_desc", "updated_asc", "name_asc", "quantity_asc", "price_desc"])
+    .enum([
+      "updated_desc",
+      "updated_asc",
+      "name_asc",
+      "name_desc",
+      "quantity_asc",
+      "quantity_desc",
+      "price_asc",
+      "price_desc",
+    ])
     .default("updated_desc"),
 });
 
@@ -111,8 +120,14 @@ function orderExpr(sort: z.infer<typeof listQuerySchema>["sort"]) {
       return [asc(components.updatedAt), asc(components.id)];
     case "name_asc":
       return [asc(components.name), asc(components.id)];
+    case "name_desc":
+      return [desc(components.name), desc(components.id)];
     case "quantity_asc":
       return [asc(components.quantity), asc(components.name)];
+    case "quantity_desc":
+      return [desc(components.quantity), asc(components.name)];
+    case "price_asc":
+      return [sql`cast(${components.price} as real) asc`, asc(components.id)];
     case "price_desc":
       return [sql`cast(${components.price} as real) desc`, asc(components.id)];
     default:
