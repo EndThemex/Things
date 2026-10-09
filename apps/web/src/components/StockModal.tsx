@@ -47,9 +47,14 @@ export default function StockModal({ open, component, onClose, onSaved }: Props)
 
   const adjust = useMutation({
     mutationFn: (values: FormValues) =>
-      api(`/components/${component!.id}`, {
+      api(`/components/${component!.id}/quantity`, {
         method: "PATCH",
-        ...json({ delta: values.delta, ...(values.totalCost !== undefined && { totalCost: values.totalCost }) }),
+        ...json({
+          delta: values.delta,
+          ...(values.totalCost !== undefined && {
+            totalCost: values.totalCost,
+          }),
+        }),
       }),
     onSuccess: () => {
       messageApi.success("库存已更新");
