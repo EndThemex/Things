@@ -70,6 +70,14 @@ export default function StockModal({ open, component, onClose, onSaved }: Props)
       okText="确认调整"
       destroyOnHidden
       width={380}
+      styles={{
+        body: {
+          // 弹窗整体不超过视口高度，内容区超出时内部滚动，底部按钮位置固定
+          maxHeight: "calc(100vh - 240px)",
+          overflowY: "auto",
+          overflowX: "hidden",
+        },
+      }}
     >
       {contextHolder}
       <Form form={form} layout="vertical" onFinish={(v) => adjust.mutate(v)}>

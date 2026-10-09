@@ -61,7 +61,22 @@ export default function CategoryManageModal({ open, onClose }: Props) {
   }, [open]);
 
   return (
-    <Modal title="分类管理" open={open} onCancel={onClose} footer={null} width={480} destroyOnHidden>
+    <Modal
+      title="分类管理"
+      open={open}
+      onCancel={onClose}
+      footer={null}
+      width={480}
+      destroyOnHidden
+      styles={{
+        body: {
+          // 弹窗整体不超过视口高度，内容区超出时内部滚动
+          maxHeight: "calc(100vh - 180px)",
+          overflowY: "auto",
+          overflowX: "hidden",
+        },
+      }}
+    >
       {contextHolder}
       <Space.Compact block style={{ marginBottom: 12 }}>
         <Input

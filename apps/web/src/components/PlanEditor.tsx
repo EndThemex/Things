@@ -149,6 +149,14 @@ export default function PlanEditor({ open, editing, onClose, onSaved }: Props) {
       onCancel={onClose}
       width={isMobile ? "100%" : 640}
       style={{ top: isMobile ? 8 : 60 }}
+      styles={{
+        body: {
+          // 弹窗整体不超过视口高度，内容区超出时内部滚动，底部按钮位置固定
+          maxHeight: `calc(100vh - ${isMobile ? 160 : 215}px)`,
+          overflowY: "auto",
+          overflowX: "hidden",
+        },
+      }}
       footer={
         <div style={{ display: "flex", justifyContent: "flex-end", gap: 8 }}>
           <Button onClick={onClose}>取消</Button>

@@ -175,6 +175,14 @@ export default function Settings() {
         confirmLoading={importing}
         okText="覆盖导入"
         okButtonProps={{ danger: true }}
+        styles={{
+          body: {
+            // 弹窗整体不超过视口高度，内容区超出时内部滚动，底部按钮位置固定
+            maxHeight: "calc(100vh - 240px)",
+            overflowY: "auto",
+            overflowX: "hidden",
+          },
+        }}
       >
         <Typography.Text>
           导入将用「{pendingJson?.name}」覆盖当前全部业务数据（物品、方案、流水），该操作不可恢复。确定继续？
@@ -186,6 +194,14 @@ export default function Settings() {
         open={csvReport !== null}
         footer={<Button type="primary" onClick={() => setCsvReport(null)}>知道了</Button>}
         onCancel={() => setCsvReport(null)}
+        styles={{
+          body: {
+            // 弹窗整体不超过视口高度，错误列表过长时内部滚动
+            maxHeight: "calc(100vh - 240px)",
+            overflowY: "auto",
+            overflowX: "hidden",
+          },
+        }}
       >
         {csvReport && (
           <Flex vertical gap={8}>

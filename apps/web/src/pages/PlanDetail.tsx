@@ -350,6 +350,14 @@ export default function PlanDetailPage() {
         confirmLoading={consume.isPending}
         okText="确认出库"
         width={360}
+        styles={{
+          body: {
+            // 弹窗整体不超过视口高度，内容区超出时内部滚动，底部按钮位置固定
+            maxHeight: "calc(100vh - 240px)",
+            overflowY: "auto",
+            overflowX: "hidden",
+          },
+        }}
       >
         <Flex vertical gap={8}>
           <Typography.Text type="secondary" style={{ fontSize: 12 }}>
