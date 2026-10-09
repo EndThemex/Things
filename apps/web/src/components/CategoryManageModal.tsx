@@ -32,7 +32,12 @@ export default function CategoryManageModal({ open, onClose }: Props) {
     enabled: open,
   });
 
-  const invalidate = () => queryClient.invalidateQueries({ queryKey: ["categories"] });
+  // 分类增删改会影响物品列表的分类列与看板的分类分布
+  const invalidate = () => {
+    queryClient.invalidateQueries({ queryKey: ["categories"] });
+    queryClient.invalidateQueries({ queryKey: ["components"] });
+    queryClient.invalidateQueries({ queryKey: ["stats"] });
+  };
 
   const create = useMutation({
     mutationFn: (n: string) => api("/categories", { method: "POST", ...json({ name: n }) }),
