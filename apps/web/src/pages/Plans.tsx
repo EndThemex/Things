@@ -1,12 +1,13 @@
 import { useState } from "react";
-import { Button, Card, Col, Empty, Flex, Grid, Row, Spin, Tag, Typography, message, theme } from "antd";
-import { ExperimentOutlined, PlusOutlined } from "@ant-design/icons";
+import { Button, Card, Col, Empty, Flex, Grid, Row, Space, Spin, Tag, Typography, message, theme } from "antd";
+import { ExperimentOutlined, ImportOutlined, PlusOutlined } from "@ant-design/icons";
 import { useQuery } from "@tanstack/react-query";
 import { useNavigate } from "react-router";
 import { api } from "../api/client";
 import type { PlanDetail, PlanSummary } from "../types";
 import { formatMoney, formatTime } from "../utils/format";
 import PlanEditor from "../components/PlanEditor";
+import PlanBomImport from "../components/PlanBomImport";
 
 function FeasibleBadge({ feasible }: { feasible: number | null }) {
   if (feasible === null) return <Tag>无明细</Tag>;
@@ -21,6 +22,7 @@ export default function PlansPage() {
   const navigate = useNavigate();
   const [editorOpen, setEditorOpen] = useState(false);
   const [editing, setEditing] = useState<PlanDetail | null>(null);
+  const [bomOpen, setBomOpen] = useState(false);
   const [messageApi, contextHolder] = message.useMessage();
 
   const { data, isLoading } = useQuery({
@@ -37,17 +39,26 @@ export default function PlansPage() {
         <Typography.Title level={5} style={{ margin: 0 }}>
           方案
         </Typography.Title>
-        <Button
-          type="primary"
-          size="small"
-          icon={<PlusOutlined />}
-          onClick={() => {
-            setEditing(null);
-            setEditorOpen(true);
-          }}
-        >
-          新建方案
-        </Button>
+        <Space>
+          <Button
+            size="small"
+            icon={<ImportOutlined />}
+            onClick={() => setBomOpen(true)}
+          >
+            导入 BOM
+          </Button>
+          <Button
+            type="primary"
+            size="small"
+            icon={<PlusOutlined />}
+            onClick={() => {
+              setEditing(null);
+              setEditorOpen(true);
+            }}
+          >
+            新建方案
+          </Button>
+        </Space>
       </Flex>
 
       <Spin spinning={isLoading}>
@@ -105,6 +116,16 @@ export default function PlansPage() {
         editing={editing}
         onClose={() => setEditorOpen(false)}
         onSaved={() => messageApi.success("方案已保存")}
+      />
+
+      <PlanBomImport
+        open={bomOpen}
+        onClose={() => setBomOpen(false)}
+        onImported={(id, created) => {
+          setBomOpen(false);
+          messageApi.success(created > 0 ? `方案已创建，并新增 ${created} 项物品到物品库` : "方案已创建");
+          navigate(`/plans/${id}`);
+        }}
       />
     </Flex>
   );

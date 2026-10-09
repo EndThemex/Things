@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import {
   Button,
-  Drawer,
+  Modal,
   Empty,
   Flex,
   Form,
@@ -143,11 +143,12 @@ export default function PlanEditor({ open, editing, onClose, onSaved }: Props) {
   };
 
   return (
-    <Drawer
+    <Modal
       title={isCreate ? "新建方案" : "编辑方案"}
       open={open}
-      onClose={onClose}
-      width={isMobile ? "100%" : 480}
+      onCancel={onClose}
+      width={isMobile ? "100%" : 640}
+      style={{ top: isMobile ? 8 : 60 }}
       footer={
         <div style={{ display: "flex", justifyContent: "flex-end", gap: 8 }}>
           <Button onClick={onClose}>取消</Button>
@@ -256,6 +257,6 @@ export default function PlanEditor({ open, editing, onClose, onSaved }: Props) {
           )}
         />
       )}
-    </Drawer>
+    </Modal>
   );
 }

@@ -206,8 +206,8 @@ backupRoutes.get("/export/csv", async (c) => {
 
 // ---------- CSV 批量导入（按表头字段名自动识别，无需模板） ----------
 
-/** 常见表头别名 → 标准字段 */
-const HEADER_ALIASES: Record<string, string> = {
+/** 常见表头别名 → 标准字段（物品 CSV 导入与 BOM 导入共用） */
+export const HEADER_ALIASES: Record<string, string> = {
   名称: "name",
   品名: "name",
   name: "name",
@@ -236,7 +236,7 @@ const HEADER_ALIASES: Record<string, string> = {
 };
 
 /** 解析 CSV 文本为二维数组（支持引号包裹、双引号转义、CRLF） */
-function parseCsv(text: string): string[][] {
+export function parseCsv(text: string): string[][] {
   const rows: string[][] = [];
   let row: string[] = [];
   let field = "";

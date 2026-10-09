@@ -104,6 +104,28 @@ export interface CsvImportReport {
   errors: string[];
 }
 
+/** BOM 解析预览行 */
+export interface BomPreviewItem {
+  name: string;
+  spec: string | null;
+  /** BOM「分类/类型」列，用于新建缺失物品时设置分类 */
+  category: string | null;
+  /** 单份用量（BOM「数量」列，同名同规格行已合并累加） */
+  quantityPer: number;
+  /** 解析出的单价，用于新建缺失物品时填充 */
+  price: string | null;
+  purchaseUrl: string | null;
+  /** 匹配到的现有物品 id；null 表示物品库中不存在，导入时将新建 */
+  matchedComponentId: number | null;
+  /** 匹配到的现有物品库存；新建行为 null */
+  stock: number | null;
+}
+
+export interface BomParseResult {
+  items: BomPreviewItem[];
+  warnings: string[];
+}
+
 export interface PlanSummary {
   id: number;
   name: string;
