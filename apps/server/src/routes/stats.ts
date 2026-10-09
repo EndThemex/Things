@@ -6,8 +6,8 @@ import { round2 } from "../services/price";
 
 export const statsRoutes = new Hono();
 
-// 概览统计：元件种类数、总数量、总价值、分类分布、标签分布、低数量 Top10、最近修改
-// 均只统计未删除（deleted_at IS NULL）的元件
+// 概览统计：物品种类数、总数量、总价值、分类分布、标签分布、低数量 Top10、最近修改
+// 均只统计未删除（deleted_at IS NULL）的物品
 statsRoutes.get("/overview", async (c) => {
   // 汇总（price 为 TEXT，需 CAST 后参与计算）
   const [summary] = await db
@@ -49,7 +49,7 @@ statsRoutes.get("/overview", async (c) => {
     .groupBy(tags.id)
     .orderBy(desc(sql`count(${componentTags.componentId})`), asc(tags.id));
 
-  // 数量最少的元件 Top10（便于发现待补货）
+  // 数量最少的物品 Top10（便于发现待补货）
   const lowStock = await db
     .select({
       id: components.id,

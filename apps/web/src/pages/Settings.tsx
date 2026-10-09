@@ -61,7 +61,7 @@ export default function Settings() {
       queryClient.clear(); // 数据已整体覆盖，清空全部缓存重新拉取
       const c = res.counts;
       messageApi.success(
-        `恢复完成：元件 ${c.components ?? 0}、分类 ${c.categories ?? 0}、标签 ${c.tags ?? 0}、方案 ${c.plans ?? 0}`,
+        `恢复完成：物品 ${c.components ?? 0}、分类 ${c.categories ?? 0}、标签 ${c.tags ?? 0}、方案 ${c.plans ?? 0}`,
       );
       setPendingJson(null);
     } catch (e) {
@@ -71,7 +71,7 @@ export default function Settings() {
     }
   };
 
-  /** CSV 元件导入 */
+  /** CSV 物品导入 */
   const handleCsvImport = async (file: File) => {
     setImporting(true);
     try {
@@ -86,7 +86,7 @@ export default function Settings() {
         failed: data?.failed ?? 0,
         errors: data?.errors ?? [],
       });
-      queryClient.invalidateQueries(); // 可能新建了分类/标签/元件
+      queryClient.invalidateQueries(); // 可能新建了分类/标签/物品
     } catch (e) {
       messageApi.error(e instanceof Error ? e.message : "导入失败");
     } finally {
@@ -145,7 +145,7 @@ export default function Settings() {
               导出 JSON 备份
             </Button>
             <Button icon={<DownloadOutlined />} onClick={() => window.open("/api/export/csv", "_blank")}>
-              导出元件 CSV
+              导出物品 CSV
             </Button>
           </Flex>
           <Flex gap={8} wrap="wrap">
@@ -156,13 +156,13 @@ export default function Settings() {
             </Upload>
             <Upload accept=".csv,text/csv" showUploadList={false} beforeUpload={(f) => void handleCsvImport(f)}>
               <Button icon={<UploadOutlined />} loading={importing}>
-                导入元件 CSV
+                导入物品 CSV
               </Button>
             </Upload>
           </Flex>
           <Typography.Text type="secondary" style={{ fontSize: 12 }}>
-            JSON 备份包含元件、分类、标签、方案与流水的全量数据（含回收站），导入将覆盖现有业务数据、保留账号；
-            CSV 仅元件数据，按表头字段名自动识别（无需模板），同名同规格默认跳过。
+            JSON 备份包含物品、分类、标签、方案与流水的全量数据（含回收站），导入将覆盖现有业务数据、保留账号；
+            CSV 仅物品数据，按表头字段名自动识别（无需模板），同名同规格默认跳过。
           </Typography.Text>
         </Flex>
       </Card>
@@ -177,7 +177,7 @@ export default function Settings() {
         okButtonProps={{ danger: true }}
       >
         <Typography.Text>
-          导入将用「{pendingJson?.name}」覆盖当前全部业务数据（元件、方案、流水），该操作不可恢复。确定继续？
+          导入将用「{pendingJson?.name}」覆盖当前全部业务数据（物品、方案、流水），该操作不可恢复。确定继续？
         </Typography.Text>
       </Modal>
 

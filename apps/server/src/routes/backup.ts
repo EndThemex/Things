@@ -143,7 +143,7 @@ backupRoutes.post("/import", async (c) => {
   });
 });
 
-// ---------- CSV 元件导出（UTF-8 BOM，表头即模板） ----------
+// ---------- CSV 物品导出（UTF-8 BOM，表头即模板） ----------
 
 const CSV_HEADER = ["名称", "类型", "数量", "规格", "单价", "颜色", "购买链接", "标签", "备注"];
 
@@ -178,7 +178,7 @@ backupRoutes.get("/export/csv", async (c) => {
     tagMap.set(l.componentId, list);
   }
 
-  // 仅导出未删除元件，回收站数据通过 JSON 备份保留
+  // 仅导出未删除物品，回收站数据通过 JSON 备份保留
   const lines = [CSV_HEADER.map(csvEsc).join(",")];
   for (const r of rows) {
     lines.push(
@@ -299,7 +299,7 @@ backupRoutes.post("/import/csv", async (c) => {
     return idx === undefined ? "" : (row[idx] ?? "").trim();
   };
 
-  // 预加载现有未删除元件的「名称+规格」用于重复识别
+  // 预加载现有未删除物品的「名称+规格」用于重复识别
   const existing = await db
     .select({ name: components.name, spec: components.spec })
     .from(components)

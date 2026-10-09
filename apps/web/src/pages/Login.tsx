@@ -28,7 +28,7 @@ export default function Login() {
       }}
     >
       {contextHolder}
-      <Card title="Things · 元件库存管理" style={{ width: "100%", maxWidth: 360 }}>
+      <Card title="Things · 物品库存管理" style={{ width: "100%", maxWidth: 360 }}>
         <Form form={form} layout="vertical" onFinish={onFinish} autoFocus>
           <Form.Item name="username" label="用户名" rules={[{ required: true, message: "请输入用户名" }]}>
             <Input autoComplete="username" />

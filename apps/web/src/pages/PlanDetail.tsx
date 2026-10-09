@@ -113,7 +113,7 @@ export default function PlanDetailPage() {
     mutationFn: (n: number) =>
       api<{ deducted: number }>(`/plans/${planId}/consume`, { method: "POST", ...json({ copies: n }) }),
     onSuccess: ({ deducted }) => {
-      messageApi.success(`已按方案出库，扣减 ${deducted} 种元件库存`);
+      messageApi.success(`已按方案出库，扣减 ${deducted} 种物品库存`);
       setConsumeOpen(false);
       queryClient.invalidateQueries({ queryKey: ["plan"] });
       queryClient.invalidateQueries({ queryKey: ["feasibility"] });
@@ -154,7 +154,7 @@ export default function PlanDetailPage() {
 
   const columns: ColumnsType<TableRow> = [
     {
-      title: "元件",
+      title: "物品",
       dataIndex: "name",
       width: 220,
       render: (_, r) => (
@@ -239,7 +239,7 @@ export default function PlanDetailPage() {
           </Button>
           <Popconfirm
             title="删除方案"
-            description="方案删除后不可恢复（不影响元件库存），确定删除？"
+            description="方案删除后不可恢复（不影响物品库存），确定删除？"
             okText="删除"
             okButtonProps={{ danger: true }}
             onConfirm={() => remove.mutate()}
@@ -255,7 +255,7 @@ export default function PlanDetailPage() {
           <Alert
             type="warning"
             showIcon
-            message={`明细中 ${trashItems.length} 个元件已在回收站，未参与计算：${trashItems.join("、")}`}
+            message={`明细中 ${trashItems.length} 个物品已在回收站，未参与计算：${trashItems.join("、")}`}
           />
         )}
 
@@ -284,7 +284,7 @@ export default function PlanDetailPage() {
         </Card>
 
         {/* 明细表（窄屏横向滚动） */}
-        <Card size="small" title="所需元件">
+        <Card size="small" title="所需物品">
           <Table
             size="small"
             rowKey="id"
@@ -353,7 +353,7 @@ export default function PlanDetailPage() {
       >
         <Flex vertical gap={8}>
           <Typography.Text type="secondary" style={{ fontSize: 12 }}>
-            按明细扣减各元件库存并记入流水；任一元件库存不足则整体失败，不产生扣减。
+            按明细扣减各物品库存并记入流水；任一物品库存不足则整体失败，不产生扣减。
           </Typography.Text>
           <Flex align="center" gap={8}>
             <Typography.Text>出库份数</Typography.Text>

@@ -27,7 +27,7 @@ const updateSchema = z.object({
 
 // ---------- 查询辅助 ----------
 
-/** 校验元件存在，返回去重后的 id 列表；缺失时返回 null */
+/** 校验物品存在，返回去重后的 id 列表；缺失时返回 null */
 async function resolveComponentIds(ids: number[]): Promise<number[] | null> {
   const unique = [...new Set(ids)];
   if (unique.length === 0) return [];
@@ -56,7 +56,7 @@ planRoutes.get("/", async (c) => {
     .from(plans)
     .orderBy(desc(plans.updatedAt), desc(plans.id));
 
-  // 一次取全部明细（仅关联未删除元件，回收站元件不参与方案计算）
+  // 一次取全部明细（仅关联未删除物品，回收站物品不参与方案计算）
   const itemRows = await db
     .select({
       planId: planItems.planId,
@@ -89,7 +89,7 @@ planRoutes.get("/", async (c) => {
         itemCount: rows.length,
         feasible: calcFeasibleCopies(calcItems),
         totalCost1: money(round2(rows.reduce((s, r) => s + r.quantityPer * (r.price === null ? 0 : Number(r.price)), 0))),
-        shortageCount: rows.filter((r) => r.quantityPer > r.quantity).length, // 目标 1 份时的缺料元件数
+        shortageCount: rows.filter((r) => r.quantityPer > r.quantity).length, // 目标 1 份时的缺料物品数
       };
     }),
   });
@@ -104,7 +104,7 @@ planRoutes.post("/", async (c) => {
   }
   const { name, description, items } = parsed.data;
   const ids = await resolveComponentIds(items.map((i) => i.componentId));
-  if (ids === null) return c.json({ error: "存在无效的元件引用" }, 400);
+  if (ids === null) return c.json({ error: "存在无效的物品引用" }, 400);
 
   const now = new Date().toISOString();
   const created = db.transaction((tx) => {
@@ -175,7 +175,7 @@ planRoutes.put("/:id", async (c) => {
   }
   if (items) {
     const ids = await resolveComponentIds(items.map((i) => i.componentId));
-    if (ids === null) return c.json({ error: "存在无效的元件引用" }, 400);
+    if (ids === null) return c.json({ error: "存在无效的物品引用" }, 400);
   }
 
   const now = new Date().toISOString();
@@ -251,8 +251,8 @@ planRoutes.post("/:id/consume", async (c) => {
       .where(eq(planItems.planId, id))
       .all();
     const active = items.filter((i) => i.deletedAt === null);
-    if (active.length === 0) return { error: "方案没有可出库的元件明细" as const };
-    // 出库前校验全部元件库存充足（事务保证原子扣减）
+    if (active.length === 0) return { error: "方案没有可出库的物品明细" as const };
+    // 出库前校验全部物品库存充足（事务保证原子扣减）
     const shortage = active.filter((i) => i.quantity < i.quantityPer * copies);
     if (shortage.length > 0) {
       return {
@@ -313,7 +313,7 @@ planRoutes.get("/:id/feasibility", async (c) => {
     .innerJoin(components, eq(components.id, planItems.componentId))
     .where(eq(planItems.planId, id));
 
-  // 回收站元件不参与方案计算，仅提示
+  // 回收站物品不参与方案计算，仅提示
   const trashItems = rows.filter((r) => r.deletedAt !== null).map((r) => r.name);
   const calcItems: PlanCalcItem[] = rows
     .filter((r) => r.deletedAt === null)

@@ -1,7 +1,6 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   Button,
-  Divider,
   Drawer,
   Form,
   Grid,
@@ -16,7 +15,7 @@ import {
   Upload,
   theme,
 } from "antd";
-import { DeleteOutlined, InboxOutlined, PlusOutlined } from "@ant-design/icons";
+import { DeleteOutlined, InboxOutlined } from "@ant-design/icons";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { api, json } from "../api/client";
 import type { Category, ComponentItem, Tag } from "../types";
@@ -52,7 +51,7 @@ export default function ComponentFormDrawer({ open, editing, onClose, onSaved }:
   const [messageApi, contextHolder] = message.useMessage();
   const [imagePath, setImagePath] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
-  const [newCategory, setNewCategory] = useState("");
+  const [categorySearch, setCategorySearch] = useState("");
   const isCreate = editing === null;
 
   const queryClient = useQueryClient();
@@ -79,7 +78,7 @@ export default function ComponentFormDrawer({ open, editing, onClose, onSaved }:
   useEffect(() => {
     if (!open) return;
     setImagePath(editing?.imagePath ?? null);
-    setNewCategory("");
+    setCategorySearch("");
     // 每次打开先全量重置，避免残留上一次的表单数据
     form.resetFields();
     form.setFieldsValue(
@@ -105,11 +104,28 @@ export default function ComponentFormDrawer({ open, editing, onClose, onSaved }:
     onSuccess: ({ item }) => {
       queryClient.invalidateQueries({ queryKey: ["categories"] });
       form.setFieldValue("categoryId", item.id);
-      setNewCategory("");
+      setCategorySearch("");
       messageApi.success(`已创建分类「${item.name}」`);
     },
     onError: (e) => messageApi.error(e.message),
   });
+
+  // 搜索词与现有分类名称都不完全一致时，在选项首位插入「创建」项，
+  // 使其默认高亮，回车即触发创建
+  const CREATE_KEY = "__create_category__";
+  const categoryOptions = useMemo<Array<{ value: number | string; label: string }>>(() => {
+    const kw = categorySearch.trim();
+    const opts: Array<{ value: number | string; label: string }> = (catData?.items ?? []).map(
+      (c) => ({ value: c.id, label: c.name }),
+    );
+    if (kw && !opts.some((o) => o.label === kw)) {
+      opts.unshift({
+        value: CREATE_KEY,
+        label: createCategory.isPending ? `正在创建「${kw}」…` : `创建分类「${kw}」`,
+      });
+    }
+    return opts;
+  }, [catData, categorySearch, createCategory.isPending]);
 
   const save = useMutation({
     mutationFn: (payload: Record<string, unknown>) =>
@@ -168,7 +184,7 @@ export default function ComponentFormDrawer({ open, editing, onClose, onSaved }:
 
   return (
     <Drawer
-      title={isCreate ? "新建元件" : "编辑元件"}
+      title={isCreate ? "新建物品" : "编辑物品"}
       open={open}
       onClose={onClose}
       width={isMobile ? "100%" : 480}
@@ -186,40 +202,39 @@ export default function ComponentFormDrawer({ open, editing, onClose, onSaved }:
         <Form.Item
           name="name"
           label="名称"
-          rules={[{ required: true, whitespace: true, message: "请输入元件名称" }]}
+          rules={[{ required: true, whitespace: true, message: "请输入物品名称" }]}
         >
-          <Input placeholder="如：Cherry MX 红轴" />
+          <Input placeholder="如：M3 螺丝 / USB-C 数据线" />
         </Form.Item>
 
-        <Form.Item name="categoryId" label="分类">
+        <Form.Item
+          name="categoryId"
+          label="分类"
+          // 选中「创建」占位项时不写入表单，保持原值，等创建成功后填入真实 id
+          getValueFromEvent={(v: unknown) =>
+            v === CREATE_KEY ? form.getFieldValue("categoryId") : v
+          }
+        >
           <Select
-            placeholder="选择分类"
+            showSearch
+            placeholder="选择或输入新分类后回车"
             allowClear
-            options={(catData?.items ?? []).map((c) => ({ value: c.id, label: c.name }))}
-            popupRender={(menu) => (
-              <>
-                {menu}
-                <Divider style={{ margin: "4px 0" }} />
-                <Space.Compact block style={{ padding: "0 4px 4px" }}>
-                  <Input
-                    size="small"
-                    placeholder="新分类名称"
-                    value={newCategory}
-                    onChange={(e) => setNewCategory(e.target.value)}
-                    onKeyDown={(e) => e.stopPropagation()}
-                    onPressEnter={() => newCategory.trim() && createCategory.mutate(newCategory.trim())}
-                  />
-                  <Button
-                    size="small"
-                    type="text"
-                    icon={<PlusOutlined />}
-                    disabled={!newCategory.trim()}
-                    loading={createCategory.isPending}
-                    onClick={() => newCategory.trim() && createCategory.mutate(newCategory.trim())}
-                  />
-                </Space.Compact>
-              </>
-            )}
+            options={categoryOptions}
+            // 忽略大小写的包含匹配；「创建」项始终保留在列表中
+            filterOption={(input, option) =>
+              option?.value === CREATE_KEY ||
+              String(option?.label ?? "").toLowerCase().includes(input.trim().toLowerCase())
+            }
+            onSearch={setCategorySearch}
+            onBlur={() => setCategorySearch("")}
+            onChange={(v) => {
+              if (v === CREATE_KEY) {
+                const kw = categorySearch.trim();
+                if (kw) createCategory.mutate(kw);
+              } else {
+                setCategorySearch("");
+              }
+            }}
           />
         </Form.Item>
 
@@ -271,7 +286,7 @@ export default function ComponentFormDrawer({ open, editing, onClose, onSaved }:
 
         <Space style={{ display: "flex" }} size={12}>
           <Form.Item name="spec" label="规格" style={{ flex: 1, minWidth: 180 }}>
-            <Input placeholder="如 0805 / 1kΩ" />
+            <Input placeholder="如：M3×10 / 500ml" />
           </Form.Item>
           <Form.Item name="color" label="颜色" style={{ flex: 1, minWidth: 120 }}>
             <Input placeholder="如 黑色" />
@@ -323,7 +338,7 @@ export default function ComponentFormDrawer({ open, editing, onClose, onSaved }:
         </Form.Item>
 
         <Form.Item name="note" label="备注">
-          <Input.TextArea rows={2} placeholder="其他渠道、封装参数等" />
+          <Input.TextArea rows={2} placeholder="购买渠道、参数等补充信息" />
         </Form.Item>
       </Form>
     </Drawer>

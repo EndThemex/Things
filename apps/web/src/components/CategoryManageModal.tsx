@@ -108,7 +108,7 @@ export default function CategoryManageModal({ open, onClose }: Props) {
             ),
           },
           {
-            title: "元件数",
+            title: "物品数",
             dataIndex: "componentCount",
             width: 80,
           },
@@ -132,7 +132,7 @@ export default function CategoryManageModal({ open, onClose }: Props) {
                 title="删除分类"
                 description={
                   r.componentCount > 0
-                    ? `有 ${r.componentCount} 个元件引用，删除后它们将变为「未分类」`
+                    ? `有 ${r.componentCount} 个物品引用，删除后它们将变为「未分类」`
                     : "确定删除该分类？"
                 }
                 okButtonProps={{ danger: true }}

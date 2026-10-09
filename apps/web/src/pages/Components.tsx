@@ -11,6 +11,7 @@ import {
   Popconfirm,
   Select,
   Space,
+  Tooltip,
   Table,
   Tabs,
   Tag,
@@ -26,6 +27,7 @@ import {
   MinusOutlined,
   PlusOutlined,
   SettingOutlined,
+  ShoppingOutlined,
   UndoOutlined,
 } from "@ant-design/icons";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -180,7 +182,7 @@ export default function ComponentsPage() {
 
   const deleteButton = (item: ComponentItem) => (
     <Popconfirm
-      title="删除元件"
+      title="删除物品"
       description={`「${item.name}」将移入回收站，可在 30 天内还原`}
       okButtonProps={{ danger: true }}
       onConfirm={() => remove.mutate(item.id)}
@@ -240,7 +242,16 @@ export default function ComponentsPage() {
       dataIndex: "name",
       render: (_: unknown, item: ComponentItem) => (
         <div>
-          <div style={{ fontWeight: 500 }}>{item.name}</div>
+          <div style={{ fontWeight: 500 }}>
+            {item.name}
+            {item.purchaseUrl && (
+              <Tooltip title="打开购买链接">
+                <a href={item.purchaseUrl} target="_blank" rel="noreferrer">
+                  <ShoppingOutlined style={{ marginLeft: 6, fontSize: 12 }} />
+                </a>
+              </Tooltip>
+            )}
+          </div>
           {(item.spec || item.color) && (
             <Typography.Text type="secondary" style={{ fontSize: 12 }}>
               {[item.spec, item.color].filter(Boolean).join(" · ")}
@@ -341,7 +352,7 @@ export default function ComponentsPage() {
           分类
         </Button>
         <Button type="primary" icon={<PlusOutlined />} onClick={openCreate}>
-          新建元件
+          新建物品
         </Button>
       </Flex>
     </Flex>
@@ -406,7 +417,7 @@ export default function ComponentsPage() {
       render: (_: unknown, item: TrashItem) => (
         <Space size={0}>
           <Popconfirm
-            title="还原该元件？"
+            title="还原该物品？"
             onConfirm={() => restore.mutate(item.id)}
           >
             <Button size="small" type="text" icon={<UndoOutlined />}>
@@ -471,7 +482,7 @@ export default function ComponentsPage() {
                     删除于 {formatTime(item.deletedAt)}
                   </Typography.Text>
                   <Space size={0}>
-                    <Popconfirm title="还原该元件？" onConfirm={() => restore.mutate(item.id)}>
+                    <Popconfirm title="还原该物品？" onConfirm={() => restore.mutate(item.id)}>
                       <Button size="small" type="text" icon={<UndoOutlined />} />
                     </Popconfirm>
                     <Popconfirm
@@ -505,7 +516,7 @@ export default function ComponentsPage() {
       )}
       {(trashData?.items.length ?? 0) > 0 && (
         <Typography.Text type="secondary" style={{ fontSize: 12, display: "block", marginTop: 8 }}>
-          回收站元件保留 30 天后自动清理；彻底删除将同时清除图片与流水，不可恢复
+          回收站物品保留 30 天后自动清理；彻底删除将同时清除图片与流水，不可恢复
         </Typography.Text>
       )}
     </>
@@ -579,6 +590,13 @@ export default function ComponentsPage() {
                                 {formatTime(item.updatedAt)}
                               </Typography.Text>
                               <Space size={0}>
+                                {item.purchaseUrl && (
+                                  <Tooltip title="打开购买链接">
+                                    <a href={item.purchaseUrl} target="_blank" rel="noreferrer">
+                                      <Button size="small" type="text" icon={<ShoppingOutlined />} />
+                                    </a>
+                                  </Tooltip>
+                                )}
                                 <Button
                                   size="small"
                                   type="text"
@@ -592,7 +610,7 @@ export default function ComponentsPage() {
                                   onClick={() => openEdit(item)}
                                 />
                                 <Popconfirm
-                                  title="删除元件"
+                                  title="删除物品"
                                   description={`「${item.name}」将移入回收站，可在 30 天内还原`}
                                   okButtonProps={{ danger: true }}
                                   onConfirm={() => remove.mutate(item.id)}
@@ -606,7 +624,7 @@ export default function ComponentsPage() {
                       ))}
                     </Flex>
                     {(data?.items.length ?? 0) === 0 && !isLoading && (
-                      <Empty description="暂无元件" image={Empty.PRESENTED_IMAGE_SIMPLE} style={{ padding: 24 }} />
+                      <Empty description="暂无物品" image={Empty.PRESENTED_IMAGE_SIMPLE} style={{ padding: 24 }} />
                     )}
                     <Flex justify="flex-end" style={{ marginTop: 12 }}>
                       <Pagination data={data} onChange={setPage} />
@@ -619,7 +637,7 @@ export default function ComponentsPage() {
           loading={isLoading}
           columns={columns}
           dataSource={data?.items ?? []}
-          locale={{ emptyText: <Empty description="暂无元件，点击右上角「新建元件」录入" image={Empty.PRESENTED_IMAGE_SIMPLE} /> }}
+          locale={{ emptyText: <Empty description="暂无物品，点击右上角「新建物品」录入" image={Empty.PRESENTED_IMAGE_SIMPLE} /> }}
           pagination={{
             current: page,
             pageSize,

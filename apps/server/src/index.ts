@@ -36,7 +36,7 @@ async function seedUser() {
 }
 await seedUser();
 
-// 启动时顺带清理回收站超期元件（软删除超过保留天数则彻底删除）
+// 启动时顺带清理回收站超期物品（软删除超过保留天数则彻底删除）
 async function cleanupTrash() {
   const cutoff = new Date(Date.now() - TRASH_RETENTION_DAYS * 86400000).toISOString();
   const expired = await db
@@ -47,7 +47,7 @@ async function cleanupTrash() {
   for (const row of expired) {
     if (hardDeleteComponent(row.id)) cleaned++;
   }
-  if (cleaned > 0) console.log(`[trash] 已自动清理 ${cleaned} 个超期回收站元件`);
+  if (cleaned > 0) console.log(`[trash] 已自动清理 ${cleaned} 个超期回收站物品`);
 }
 await cleanupTrash();
 

@@ -12,7 +12,7 @@ import { ensureTagIds } from "./tags";
 /** 回收站保留天数 */
 export const TRASH_RETENTION_DAYS = 30;
 
-/** 彻底删除元件（连同标签关联、流水、方案明细引用与图片文件） */
+/** 彻底删除物品（连同标签关联、流水、方案明细引用与图片文件） */
 export function hardDeleteComponent(id: number): boolean {
   const [row] = db
     .select({ imagePath: components.imagePath })
@@ -24,7 +24,7 @@ export function hardDeleteComponent(id: number): boolean {
   db.transaction((tx) => {
     tx.delete(componentTags).where(eq(componentTags.componentId, id)).run();
     tx.delete(stockMovements).where(eq(stockMovements.componentId, id)).run();
-    // 方案明细中引用该元件的行一并移除（明细展示用 innerJoin，删除后行自然消失）
+    // 方案明细中引用该物品的行一并移除（明细展示用 innerJoin，删除后行自然消失）
     tx.delete(planItems).where(eq(planItems.componentId, id)).run();
     tx.delete(components).where(eq(components.id, id)).run();
   });
@@ -125,7 +125,7 @@ function likePattern(q: string) {
   return `%${q.replace(/[\\%_]/g, (m) => `\\${m}`)}%`;
 }
 
-/** 构造列表/计数共用的 where 条件（排除回收站元件） */
+/** 构造列表/计数共用的 where 条件（排除回收站物品） */
 function buildWhere(query: z.infer<typeof listQuerySchema>) {
   const conds = [isNull(components.deletedAt)];
   if (query.q) {
@@ -154,7 +154,7 @@ function buildWhere(query: z.infer<typeof listQuerySchema>) {
   return and(...conds);
 }
 
-/** 批量取元件标签 */
+/** 批量取物品标签 */
 async function attachTags(rows: { id: number }[]) {
   const ids = rows.map((r) => r.id);
   if (ids.length === 0) return new Map<number, { id: number; name: string }[]>();
@@ -263,7 +263,7 @@ componentRoutes.post("/:id/restore", async (c) => {
     .where(and(eq(components.id, id), isNotNull(components.deletedAt)))
     .returning()
     .all();
-  if (!row) return c.json({ error: "元件不在回收站中" }, 404);
+  if (!row) return c.json({ error: "物品不在回收站中" }, 404);
   return c.json({ ok: true });
 });
 
@@ -272,7 +272,7 @@ componentRoutes.post("/:id/restore", async (c) => {
 componentRoutes.delete("/:id/hard", async (c) => {
   const id = Number(c.req.param("id"));
   if (!Number.isInteger(id)) return c.json({ error: "参数错误" }, 400);
-  if (!hardDeleteComponent(id)) return c.json({ error: "元件不存在" }, 404);
+  if (!hardDeleteComponent(id)) return c.json({ error: "物品不存在" }, 404);
   return c.json({ ok: true });
 });
 
@@ -367,7 +367,7 @@ componentRoutes.get("/:id", async (c) => {
     .leftJoin(categories, eq(categories.id, components.categoryId))
     .where(and(eq(components.id, id), isNull(components.deletedAt)))
     .limit(1);
-  if (!row) return c.json({ error: "元件不存在" }, 404);
+  if (!row) return c.json({ error: "物品不存在" }, 404);
 
   const tagMap = await attachTags([row]);
   return c.json({ item: { ...row, tags: tagMap.get(row.id) ?? [] } });
@@ -402,7 +402,7 @@ componentRoutes.put("/:id", async (c) => {
     .where(and(eq(components.id, id), isNull(components.deletedAt)))
     .returning()
     .all();
-  if (!row) return c.json({ error: "元件不存在" }, 404);
+  if (!row) return c.json({ error: "物品不存在" }, 404);
 
   const tagIds = await ensureTagIds(data.tags);
   await db.delete(componentTags).where(eq(componentTags.componentId, id)).run();
@@ -427,7 +427,7 @@ componentRoutes.delete("/:id", async (c) => {
     .where(and(eq(components.id, id), isNull(components.deletedAt)))
     .returning()
     .all();
-  if (!row) return c.json({ error: "元件不存在" }, 404);
+  if (!row) return c.json({ error: "物品不存在" }, 404);
   return c.json({ ok: true });
 });
 
@@ -480,7 +480,7 @@ componentRoutes.patch("/:id/quantity", async (c) => {
       return { quantity: updatedRow.quantity, price: updatedRow.price };
     });
 
-    if ("notFound" in updated) return c.json({ error: "元件不存在" }, 404);
+    if ("notFound" in updated) return c.json({ error: "物品不存在" }, 404);
     if ("error" in updated) return c.json({ error: updated.error }, 400);
     return c.json({ ok: true, quantity: updated.quantity, price: updated.price });
   } catch (err) {

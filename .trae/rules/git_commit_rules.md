@@ -1,3 +1,8 @@
+---
+alwaysApply: false
+description: "Git 提交信息规则"
+---
+
 # Git 提交信息规则
 
 格式：`<type>: <中文描述>`（一行，≤50 字）

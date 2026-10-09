@@ -10,7 +10,7 @@ const item = (partial: Partial<PlanCalcItem>): PlanCalcItem => ({
 });
 
 describe("calcFeasibleCopies 可行份数", () => {
-  it("取所有元件的最小值", () => {
+  it("取所有物品的最小值", () => {
     const items = [
       item({ componentId: 1, quantity: 10, quantityPer: 3 }), // floor(10/3) = 3
       item({ componentId: 2, quantity: 7, quantityPer: 2 }), // floor(7/2) = 3
@@ -19,7 +19,7 @@ describe("calcFeasibleCopies 可行份数", () => {
     expect(calcFeasibleCopies(items)).toBe(2);
   });
 
-  it("任一元件库存为 0 时即 0", () => {
+  it("任一物品库存为 0 时即 0", () => {
     const items = [
       item({ componentId: 1, quantity: 100, quantityPer: 1 }),
       item({ componentId: 2, quantity: 0, quantityPer: 1 }),

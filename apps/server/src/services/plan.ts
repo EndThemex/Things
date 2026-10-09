@@ -1,7 +1,7 @@
 /**
  * 方案核心计算（可行份数、缺料、总价，含单测）。
  * 约定：数量为整数；quantity_per > 0；单价为元（number 或 null）；金额四舍五入到分。
- * 回收站（软删除）元件不参与方案计算，由调用方过滤。
+ * 回收站（软删除）物品不参与方案计算，由调用方过滤。
  */
 import { round2 } from "./price";
 
@@ -39,7 +39,7 @@ export interface PlanCalcResult {
   shortageCost: number;
 }
 
-/** 可行份数 = min(floor(库存 ÷ 单份用量))，对方案中所有元件取最小值 */
+/** 可行份数 = min(floor(库存 ÷ 单份用量))，对方案中所有物品取最小值 */
 export function calcFeasibleCopies(items: PlanCalcItem[]): number | null {
   if (items.length === 0) return null;
   let min = Infinity;

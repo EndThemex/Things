@@ -8,7 +8,7 @@ const nameSchema = z.string().trim().min(1, "标签不能为空").max(30, "标�
 
 export const tagRoutes = new Hono();
 
-// 标签列表（含未删除元件的引用数）
+// 标签列表（含未删除物品的引用数）
 tagRoutes.get("/", async (c) => {
   const rows = await db
     .select({
@@ -38,7 +38,7 @@ tagRoutes.post("/", async (c) => {
   return c.json({ item: row }, 201);
 });
 
-// 删除标签：元件-标签关联由数据库 ON DELETE CASCADE 一并清除
+// 删除标签：物品-标签关联由数据库 ON DELETE CASCADE 一并清除
 tagRoutes.delete("/:id", async (c) => {
   const id = Number(c.req.param("id"));
   if (!Number.isInteger(id)) return c.json({ error: "参数错误" }, 400);
@@ -47,7 +47,7 @@ tagRoutes.delete("/:id", async (c) => {
   return c.json({ ok: true });
 });
 
-// 供元件路由复用：按名称批量取/建标签，返回 id 列表
+// 供物品路由复用：按名称批量取/建标签，返回 id 列表
 export async function ensureTagIds(names: string[]): Promise<number[]> {
   const ids: number[] = [];
   for (const name of names) {

@@ -82,7 +82,7 @@ export default function PlansPage() {
                     )}
                     <Flex gap={12} wrap="wrap" style={{ marginTop: "auto", fontSize: 12 }} align="center">
                       <span>
-                        <ExperimentOutlined /> {p.itemCount} 种元件
+                        <ExperimentOutlined /> {p.itemCount} 种物品
                       </span>
                       <span>1 份 {formatMoney(p.totalCost1)}</span>
                       <span style={p.shortageCount > 0 ? { color: token.colorError } : undefined}>

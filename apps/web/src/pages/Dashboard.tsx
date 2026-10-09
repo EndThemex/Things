@@ -80,7 +80,7 @@ export default function DashboardPage() {
   const totalQuantity = pieData.reduce((s, d) => s + d.value, 0);
 
   const statCards = [
-    { title: "元件种类数", value: summary ? String(summary.kinds) : "-" },
+    { title: "物品种类数", value: summary ? String(summary.kinds) : "-" },
     { title: "总数量", value: summary ? String(summary.totalQuantity) : "-" },
     { title: "总价值", value: summary ? formatMoney(summary.totalValue) : "-" },
   ];
@@ -107,7 +107,7 @@ export default function DashboardPage() {
           <Col xs={24} lg={12}>
             <Card size="small" title="分类数量分布">
               {pieData.length === 0 ? (
-                <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description="暂无元件" />
+                <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description="暂无物品" />
               ) : (
                 <Flex wrap="wrap" align="center" gap={16} justify="center">
                   <Donut data={pieData} size={168} stroke={26} centerValue={`${summary?.kinds ?? 0}`} centerLabel="种类" />
@@ -137,7 +137,7 @@ export default function DashboardPage() {
           <Col xs={24} lg={12}>
             <Card size="small" title="数量最少 Top10">
               {(data?.lowStock ?? []).length === 0 ? (
-                <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description="暂无元件" />
+                <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description="暂无物品" />
               ) : (
                 <Flex vertical gap={8}>
                   {data!.lowStock.map((l) => (
@@ -176,7 +176,7 @@ export default function DashboardPage() {
         {/* 最近修改 */}
         <Card size="small" title="最近修改">
           {(data?.recent ?? []).length === 0 ? (
-            <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description="暂无元件" />
+            <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description="暂无物品" />
           ) : (
             <Flex vertical gap={8}>
               {data!.recent.map((r) => (

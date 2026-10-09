@@ -18,7 +18,7 @@ const updateSchema = z.object({
 
 export const categoryRoutes = new Hono();
 
-// 分类列表（含未删除元件的引用数，便于删除前提示影响范围）
+// 分类列表（含未删除物品的引用数，便于删除前提示影响范围）
 categoryRoutes.get("/", async (c) => {
   const rows = await db
     .select({
@@ -74,7 +74,7 @@ categoryRoutes.put("/:id", async (c) => {
   }
 });
 
-// 删除分类：引用它的元件 categoryId 由数据库 ON DELETE SET NULL 置空
+// 删除分类：引用它的物品 categoryId 由数据库 ON DELETE SET NULL 置空
 categoryRoutes.delete("/:id", async (c) => {
   const id = Number(c.req.param("id"));
   if (!Number.isInteger(id)) return c.json({ error: "参数错误" }, 400);

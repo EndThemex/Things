@@ -36,6 +36,7 @@
 
 ## 前端规则（apps/web）
 
+- 页面布局需要适配移动端和桌面端
 - 页面组件放 `src/pages/`，主题相关在 `src/theme/`，API 调用统一走 `src/api/client.ts`
 - 服务端状态一律用 TanStack Query（含缓存失效刷新），不要手写 useEffect 拉数据
 - UI 一律用 Ant Design 5 组件，主题切换通过 `theme.darkAlgorithm` / `defaultAlgorithm`，不引入其他 UI 库

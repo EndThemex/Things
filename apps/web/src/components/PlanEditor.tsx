@@ -121,7 +121,7 @@ export default function PlanEditor({ open, editing, onClose, onSaved }: Props) {
     setItems((prev) => {
       const exists = prev.find((i) => i.componentId === pickId);
       if (exists) {
-        messageApi.info("该元件已在明细中，已更新单份用量");
+        messageApi.info("该物品已在明细中，已更新单份用量");
         return prev.map((i) =>
           i.componentId === pickId ? { ...i, quantityPer: pickQty } : i,
         );
@@ -164,7 +164,7 @@ export default function PlanEditor({ open, editing, onClose, onSaved }: Props) {
           label="方案名称"
           rules={[{ required: true, whitespace: true, message: "请输入方案名称" }]}
         >
-          <Input placeholder="如：HHKB 客制化键盘" />
+          <Input placeholder="如：客制化键盘" />
         </Form.Item>
         <Form.Item name="description" label="描述">
           <Input.TextArea rows={2} placeholder="方案说明（可选）" />
@@ -172,7 +172,7 @@ export default function PlanEditor({ open, editing, onClose, onSaved }: Props) {
       </Form>
 
       <Typography.Text strong style={{ display: "block", marginBottom: 8 }}>
-        所需元件（单份用量）
+        所需物品（单份用量）
       </Typography.Text>
       <Flex gap={8} wrap="wrap" style={{ marginBottom: 12 }}>
         <Select
@@ -181,9 +181,9 @@ export default function PlanEditor({ open, editing, onClose, onSaved }: Props) {
           onSearch={setQ}
           onChange={setPickId}
           filterOption={false}
-          placeholder="搜索并选择元件"
+          placeholder="搜索并选择物品"
           style={{ flex: 1, minWidth: 180 }}
-          notFoundContent="未找到元件"
+          notFoundContent="未找到物品"
           options={(compData?.items ?? []).map((c) => ({
             value: c.id,
             label: `${c.name}${c.spec ? `（${c.spec}）` : ""} · 库存 ${c.quantity}`,

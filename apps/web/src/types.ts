@@ -43,7 +43,7 @@ export interface Paged<T> {
 
 export interface StatsOverview {
   summary: {
-    /** 元件种类数 */
+    /** 物品种类数 */
     kinds: number;
     /** 总数量 */
     totalQuantity: number;
@@ -108,13 +108,13 @@ export interface PlanSummary {
   id: number;
   name: string;
   description: string | null;
-  /** 明细元件种数（不含回收站元件） */
+  /** 明细物品种数（不含回收站物品） */
   itemCount: number;
   /** 当前可行份数；无明细时为 null */
   feasible: number | null;
   /** 1 份总价（元，两位小数字符串） */
   totalCost1: string;
-  /** 目标 1 份时的缺料元件数 */
+  /** 目标 1 份时的缺料物品数 */
   shortageCount: number;
   updatedAt: string;
 }
@@ -130,7 +130,7 @@ export interface PlanDetailItem {
   price: string | null;
   purchaseUrl: string | null;
   imagePath: string | null;
-  /** 元件是否已在回收站（不参与方案计算） */
+  /** 物品是否已在回收站（不参与方案计算） */
   inTrash: boolean;
 }
 
@@ -166,6 +166,6 @@ export interface Feasibility {
   shortageCost: string;
   /** 缺料清单（按缺少量降序） */
   shortages: ShortageEntry[];
-  /** 已在回收站、未参与计算的元件名 */
+  /** 已在回收站、未参与计算的物品名 */
   trashItems: string[];
 }

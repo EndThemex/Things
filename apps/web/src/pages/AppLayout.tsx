@@ -11,7 +11,7 @@ import { useTheme } from "../theme/ThemeProvider";
 const { Header, Sider, Content } = Layout;
 
 const NAV_ITEMS = [
-  { key: "/components", icon: <AppstoreOutlined />, label: "元件库" },
+  { key: "/components", icon: <AppstoreOutlined />, label: "物品库" },
   { key: "/dashboard", icon: <DashboardOutlined />, label: "看板" },
   { key: "/plans", icon: <ExperimentOutlined />, label: "方案" },
   { key: "/settings", icon: <SettingOutlined />, label: "设置" },
