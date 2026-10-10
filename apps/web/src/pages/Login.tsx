@@ -11,8 +11,8 @@ export default function Login() {
     try {
       await api("/auth/login", { method: "POST", ...json(values) });
       navigate("/", { replace: true });
-    } catch (e: any) {
-      messageApi.error(e.message ?? "登录失败");
+    } catch (e) {
+      messageApi.error(e instanceof Error && e.message ? e.message : "登录失败");
       form.setFieldValue("password", "");
     }
   };

@@ -478,8 +478,9 @@ componentRoutes.patch("/:id/quantity", async (c) => {
         .update(components)
         .set({
           quantity: next,
-          ...(newPrice !== null && { price: newPrice }),
-          updatedAt: now,
+          // 仅数量变动属库存流水（已有 stockMovements 记录），不更新 updatedAt，
+          // 避免按修改时间排序时该元件跳到列表顶部；只有单价等资料字段变化才更新
+          ...(newPrice !== null && { price: newPrice, updatedAt: now }),
         })
         .where(eq(components.id, id))
         .returning()

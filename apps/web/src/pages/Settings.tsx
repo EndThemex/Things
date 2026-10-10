@@ -96,7 +96,7 @@ export default function Settings() {
   };
 
   return (
-    <Flex vertical gap={16} style={{ maxWidth: 480 }}>
+    <Flex vertical gap={16} style={{ maxWidth: 480, margin: "0 auto" }}>
       {contextHolder}
       <Card title="账号">
         <Form form={form} layout="vertical" onFinish={onFinish}>

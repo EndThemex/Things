@@ -1,9 +1,12 @@
-import { Layout, Menu, Grid, theme } from "antd";
+import { useEffect, useRef } from "react";
+import { Layout, Menu, Grid, Button, Typography, theme } from "antd";
 import {
   AppstoreOutlined,
   DashboardOutlined,
   ExperimentOutlined,
   SettingOutlined,
+  SunOutlined,
+  MoonOutlined,
 } from "@ant-design/icons";
 import { Outlet, useLocation, useNavigate } from "react-router";
 import { useTheme } from "../theme/ThemeProvider";
@@ -28,6 +31,8 @@ export default function AppLayout() {
   const selectedKey =
     NAV_ITEMS.filter((i) => location.pathname.startsWith(i.key))
       .sort((a, b) => b.key.length - a.key.length)[0]?.key ?? "/components";
+  const pageTitle =
+    location.pathname.startsWith("/plans/") ? "方案详情" : NAV_ITEMS.find((i) => i.key === selectedKey)?.label;
 
   const menuProps = {
     items: NAV_ITEMS,
@@ -35,10 +40,17 @@ export default function AppLayout() {
     onClick: ({ key }: { key: string }) => navigate(key),
   };
 
+  // 滚动容器是 Content 而非 window，路由切换时需手动回顶
+  const contentRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    contentRef.current?.scrollTo(0, 0);
+  }, [location.pathname]);
+
   return (
-    <Layout style={{ minHeight: "100dvh" }}>
+    // 应用壳布局：整体占满视口，侧边栏与顶栏固定，仅内容区滚动
+    <Layout style={{ height: "100dvh" }}>
       {!isMobile && (
-        <Sider width={160} theme="light">
+        <Sider width={160} theme="light" style={{ overflowY: "auto" }}>
           <div style={{ fontWeight: 700, padding: "12px 16px" }}>Things</div>
           <Menu mode="inline" {...menuProps} style={{ borderInlineEnd: "none" }} />
         </Sider>
@@ -52,16 +64,30 @@ export default function AppLayout() {
             alignItems: "center",
             height: 44,
             lineHeight: "44px",
+            gap: 8,
           }}
         >
           {isMobile && <span style={{ fontWeight: 700, fontSize: 15 }}>Things</span>}
+          <Typography.Text
+            type="secondary"
+            style={{ fontSize: 13, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}
+          >
+            {pageTitle}
+          </Typography.Text>
           <span style={{ flex: 1 }} />
-          <span role="button" onClick={toggle} style={{ cursor: "pointer", fontSize: 16 }} aria-label="切换主题">
-            {mode === "dark" ? "🌙" : "☀️"}
-          </span>
+          <Button
+            type="text"
+            size="small"
+            shape="circle"
+            icon={mode === "dark" ? <SunOutlined /> : <MoonOutlined />}
+            onClick={toggle}
+            aria-label="切换主题"
+          />
         </Header>
-        <Content style={{ padding: "0 12px 12px", maxWidth: 1200, width: "100%", margin: "0 auto" }}>
-          <Outlet />
+        <Content ref={contentRef} style={{ overflowY: "auto" }}>
+          <div style={{ padding: "0 12px 12px", maxWidth: 1200, width: "100%", margin: "0 auto" }}>
+            <Outlet />
+          </div>
         </Content>
         {isMobile && (
           <nav
@@ -77,10 +103,11 @@ export default function AppLayout() {
             {NAV_ITEMS.map((item) => {
               const selected = item.key === selectedKey;
               return (
-                <div
+                <button
                   key={item.key}
-                  role="button"
+                  type="button"
                   aria-label={item.label}
+                  aria-current={selected ? "page" : undefined}
                   onClick={() => navigate(item.key)}
                   style={{
                     flex: 1,
@@ -90,13 +117,15 @@ export default function AppLayout() {
                     gap: 2,
                     padding: "6px 0 4px",
                     fontSize: 12,
+                    border: "none",
+                    background: "transparent",
                     color: selected ? token.colorPrimary : token.colorText,
                     cursor: "pointer",
                   }}
                 >
                   <span style={{ fontSize: 16, lineHeight: 1 }}>{item.icon}</span>
                   <span>{item.label}</span>
-                </div>
+                </button>
               );
             })}
           </nav>

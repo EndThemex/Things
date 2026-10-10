@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   Button,
   Card,
@@ -30,7 +30,8 @@ import {
   ShoppingOutlined,
   UndoOutlined,
 } from "@ant-design/icons";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { keepPreviousData, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useSearchParams } from "react-router";
 import type { SorterResult } from "antd/es/table/interface";
 import { api, json } from "../api/client";
 import type { Category, ComponentItem, Paged, Tag as TagItem, TrashItem } from "../types";
@@ -81,12 +82,73 @@ export default function ComponentsPage() {
   const screens = Grid.useBreakpoint();
   const isMobile = !screens.md;
 
-  const [q, setQ] = useState("");
-  const [categoryId, setCategoryId] = useState<number | undefined>();
-  const [tagIds, setTagIds] = useState<number[]>([]);
-  const [sort, setSort] = useState("updated_desc");
-  const [page, setPage] = useState(1);
+  // 筛选 / 排序 / 分页状态同步到 URL，刷新或分享链接不丢失
+  const [searchParams, setSearchParams] = useSearchParams();
+  const q = searchParams.get("q") ?? "";
+  const categoryId = useMemo(() => {
+    const v = searchParams.get("categoryId");
+    return v !== null && v !== "" ? Number(v) : undefined;
+  }, [searchParams]);
+  const tagIds = useMemo(
+    () =>
+      (searchParams.get("tagIds") ?? "")
+        .split(",")
+        .filter((s) => s !== "")
+        .map(Number)
+        .filter((n) => !Number.isNaN(n)),
+    [searchParams],
+  );
+  const sort = searchParams.get("sort") ?? "updated_desc";
+  const page = Math.max(1, Number(searchParams.get("page") ?? "1") || 1);
   const pageSize = 20;
+
+  /** 更新筛选参数并重置页码；用 replace 避免每次筛选都压入历史记录 */
+  const updateParams = (patch: Record<string, string | null>) => {
+    setSearchParams(
+      (prev) => {
+        const next = new URLSearchParams(prev);
+        for (const [k, v] of Object.entries(patch)) {
+          if (v === null || v === "") next.delete(k);
+          else next.set(k, v);
+        }
+        next.delete("page");
+        return next;
+      },
+      { replace: true },
+    );
+  };
+
+  const setPage = (p: number) => {
+    setSearchParams(
+      (prev) => {
+        const next = new URLSearchParams(prev);
+        if (p <= 1) next.delete("page");
+        else next.set("page", String(p));
+        return next;
+      },
+      { replace: true },
+    );
+  };
+
+  // 搜索框本地输入，防抖 300ms 写入 URL；回车/清空由 onSearch 立即写入
+  const [searchInput, setSearchInput] = useState(q);
+  useEffect(() => {
+    const trimmed = searchInput.trim();
+    if (trimmed === q) return;
+    const timer = setTimeout(() => {
+      setSearchParams(
+        (prev) => {
+          const next = new URLSearchParams(prev);
+          if (trimmed) next.set("q", trimmed);
+          else next.delete("q");
+          next.delete("page");
+          return next;
+        },
+        { replace: true },
+      );
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [searchInput, q, setSearchParams]);
 
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [editing, setEditing] = useState<ComponentItem | null>(null);
@@ -111,6 +173,8 @@ export default function ComponentsPage() {
   const { data, isLoading } = useQuery({
     queryKey: ["components", queryString],
     queryFn: () => api<Paged<ComponentItem>>(`/components?${queryString}`),
+    // 保留上一页数据，翻页/改筛选时表格不闪空
+    placeholderData: keepPreviousData,
   });
   const { data: catData } = useQuery({
     queryKey: ["categories"],
@@ -269,8 +333,7 @@ export default function ComponentsPage() {
         ? "updated_desc" // 第三次点击取消排序，回到默认
         : SORT_FIELD_MAP[field][sorter.order === "ascend" ? "asc" : "desc"];
     if (next === sort) return;
-    setSort(next);
-    setPage(1);
+    updateParams({ sort: next }); // 内部会重置页码
   };
 
   const columns = [
@@ -367,9 +430,12 @@ export default function ComponentsPage() {
       <Input.Search
         placeholder="搜索名称 / 规格"
         allowClear
+        value={searchInput}
+        onChange={(e) => setSearchInput(e.target.value)}
         onSearch={(v) => {
-          setQ(v.trim());
-          setPage(1);
+          // 回车/清空立即写入（跳过防抖）
+          setSearchInput(v.trim());
+          updateParams({ q: v.trim() || null });
         }}
         style={{ width: isMobile ? "100%" : 200 }}
       />
@@ -377,10 +443,7 @@ export default function ComponentsPage() {
         placeholder="分类"
         allowClear
         value={categoryId}
-        onChange={(v) => {
-          setCategoryId(v);
-          setPage(1);
-        }}
+        onChange={(v) => updateParams({ categoryId: v === undefined ? null : String(v) })}
         options={(catData?.items ?? []).map((c) => ({ value: c.id, label: c.name }))}
         style={{ width: 130 }}
       />
@@ -389,15 +452,17 @@ export default function ComponentsPage() {
         placeholder="标签"
         allowClear
         value={tagIds}
-        onChange={(v) => {
-          setTagIds(v);
-          setPage(1);
-        }}
+        onChange={(v) => updateParams({ tagIds: v.length > 0 ? v.join(",") : null })}
         options={(tagData?.items ?? []).map((t) => ({ value: t.id, label: t.name }))}
         maxTagCount="responsive"
         style={{ minWidth: 140, maxWidth: isMobile ? "100%" : 240 }}
       />
-      <Select value={sort} onChange={setSort} options={SORT_OPTIONS} style={{ width: 130 }} />
+      <Select
+        value={sort}
+        onChange={(v) => updateParams({ sort: v })}
+        options={SORT_OPTIONS}
+        style={{ width: 130 }}
+      />
       <Flex flex={1} justify="flex-end" gap={8}>
         <Button icon={<SettingOutlined />} onClick={() => setCatModalOpen(true)}>
           分类
@@ -692,6 +757,7 @@ export default function ComponentsPage() {
           loading={isLoading}
           columns={columns}
           dataSource={data?.items ?? []}
+          scroll={{ x: 940 }}
           onChange={(_pagination, _filters, sorter) =>
             handleTableSort(Array.isArray(sorter) ? sorter[0] : sorter)
           }

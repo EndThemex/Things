@@ -1,11 +1,13 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   Alert,
   Button,
   Card,
   Col,
+  Dropdown,
   Empty,
   Flex,
+  Grid,
   Image,
   InputNumber,
   Modal,
@@ -19,7 +21,13 @@ import {
   theme,
 } from "antd";
 import type { ColumnsType } from "antd/es/table";
-import { ArrowLeftOutlined, CopyOutlined, EditOutlined, ExportOutlined } from "@ant-design/icons";
+import {
+  ArrowLeftOutlined,
+  CopyOutlined,
+  DeleteOutlined,
+  EditOutlined,
+  ExportOutlined,
+} from "@ant-design/icons";
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useNavigate, useParams } from "react-router";
 import { api, json } from "../api/client";
@@ -65,6 +73,8 @@ type TableRow = PlanDetailItem & { need: number; shortage: number };
 
 export default function PlanDetailPage() {
   const { token } = theme.useToken();
+  const screens = Grid.useBreakpoint();
+  const isMobile = !screens.md;
   const params = useParams();
   const planId = Number(params.id);
   const navigate = useNavigate();
@@ -74,6 +84,12 @@ export default function PlanDetailPage() {
   const [editorOpen, setEditorOpen] = useState(false);
   const [consumeOpen, setConsumeOpen] = useState(false);
   const [consumeCopies, setConsumeCopies] = useState(1);
+  // 目标份数防抖，避免连续输入时逐键请求 feasibility；本地计算仍即时用 copies
+  const [debouncedCopies, setDebouncedCopies] = useState(1);
+  useEffect(() => {
+    const t = setTimeout(() => setDebouncedCopies(copies), 300);
+    return () => clearTimeout(t);
+  }, [copies]);
 
   const planQ = useQuery({
     queryKey: ["plan", planId],
@@ -83,14 +99,14 @@ export default function PlanDetailPage() {
   const plan = planQ.data?.item ?? null;
 
   const feasQ = useQuery({
-    queryKey: ["feasibility", planId, copies],
-    queryFn: () => api<Feasibility>(`/plans/${planId}/feasibility?copies=${copies}`),
+    queryKey: ["feasibility", planId, debouncedCopies],
+    queryFn: () => api<Feasibility>(`/plans/${planId}/feasibility?copies=${debouncedCopies}`),
     enabled: plan !== null,
     placeholderData: keepPreviousData,
   });
 
   const local = useMemo(() => (plan ? calcFromDetail(plan.items, copies) : null), [plan, copies]);
-  // 服务端结果与当前目标份数一致时优先采用
+  // 服务端结果与当前目标份数一致时优先采用（防抖期间回退本地即时计算）
   const server = feasQ.data && feasQ.data.copies === copies ? feasQ.data : null;
   const feasible = server ? server.feasible : (local?.feasible ?? null);
   const totalCost1 = server?.totalCost1 ?? local?.totalCost1 ?? "0.00";
@@ -234,21 +250,49 @@ export default function PlanDetailPage() {
           >
             出库
           </Button>
-          <Button size="small" icon={<EditOutlined />} onClick={() => setEditorOpen(true)} disabled={!plan}>
-            编辑
-          </Button>
-          <Popconfirm
-            title="删除方案"
-            description="方案删除后不可恢复（不影响物品库存），确定删除？"
-            okText="删除"
-            okButtonProps={{ danger: true }}
-            onConfirm={() => remove.mutate()}
-            disabled={!plan}
-          >
-            <Button size="small" danger disabled={!plan} loading={remove.isPending}>
-              删除
-            </Button>
-          </Popconfirm>
+          {isMobile ? (
+            // 窄屏标题区放不下多个按钮，编辑/删除收进更多菜单
+            <Dropdown
+              menu={{
+                items: [
+                  { key: "edit", icon: <EditOutlined />, label: "编辑", disabled: !plan },
+                  {
+                    key: "delete",
+                    icon: <DeleteOutlined />,
+                    label: "删除",
+                    danger: true,
+                    disabled: !plan,
+                  },
+                ],
+                onClick: ({ key }) => {
+                  if (key === "edit") setEditorOpen(true);
+                  else if (key === "delete") remove.mutate();
+                },
+              }}
+            >
+              <Button size="small" aria-label="更多操作" disabled={!plan}>
+                更多
+              </Button>
+            </Dropdown>
+          ) : (
+            <>
+              <Button size="small" icon={<EditOutlined />} onClick={() => setEditorOpen(true)} disabled={!plan}>
+                编辑
+              </Button>
+              <Popconfirm
+                title="删除方案"
+                description="方案删除后不可恢复（不影响物品库存），确定删除？"
+                okText="删除"
+                okButtonProps={{ danger: true }}
+                onConfirm={() => remove.mutate()}
+                disabled={!plan}
+              >
+                <Button size="small" danger disabled={!plan} loading={remove.isPending}>
+                  删除
+                </Button>
+              </Popconfirm>
+            </>
+          )}
         </Flex>
 
         {trashItems.length > 0 && (

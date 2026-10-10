@@ -1,5 +1,6 @@
 import { Card, Col, Empty, Flex, Image, Row, Spin, Typography, theme } from "antd";
 import { useQuery } from "@tanstack/react-query";
+import { Link } from "react-router";
 import { api } from "../api/client";
 import type { StatsOverview } from "../types";
 import { formatMoney, formatTime } from "../utils/format";
@@ -88,15 +89,25 @@ export default function DashboardPage() {
   return (
     <Spin spinning={isLoading}>
       <Flex vertical gap={12}>
-        {/* 概览卡片 */}
+        {/* 概览卡片：窄屏缩小字号，避免三列挤压 */}
         <Row gutter={12}>
           {statCards.map((s) => (
-            <Col span={8} key={s.title}>
-              <Card size="small" styles={{ body: { padding: "10px 12px" } }}>
+            <Col xs={8} key={s.title}>
+              <Card size="small" styles={{ body: { padding: "10px 8px" } }}>
                 <Typography.Text type="secondary" style={{ fontSize: 12 }}>
                   {s.title}
                 </Typography.Text>
-                <div style={{ fontSize: 22, fontWeight: 700, lineHeight: 1.3 }}>{s.value}</div>
+                <div
+                  style={{
+                    fontSize: "clamp(15px, 4.2vw, 22px)",
+                    fontWeight: 700,
+                    lineHeight: 1.3,
+                    overflow: "hidden",
+                    textOverflow: "ellipsis",
+                  }}
+                >
+                  {s.value}
+                </div>
               </Card>
             </Col>
           ))}
@@ -116,15 +127,27 @@ export default function DashboardPage() {
                       const pct = totalQuantity > 0 ? Math.round((cat.quantity / totalQuantity) * 100) : 0;
                       const color = cat.id === null ? UNCATEGORIZED_COLOR : PALETTE[i % PALETTE.length];
                       return (
-                        <Flex key={`${cat.id ?? "none"}-${cat.name}`} align="center" gap={8}>
-                          <span style={{ width: 8, height: 8, borderRadius: 2, background: color, flexShrink: 0 }} />
-                          <span style={{ flex: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                            {cat.name}
-                          </span>
-                          <Typography.Text type="secondary" style={{ fontSize: 12, flexShrink: 0 }}>
-                            ×{cat.quantity}（{pct}%）
-                          </Typography.Text>
-                        </Flex>
+                        <Link
+                          key={`${cat.id ?? "none"}-${cat.name}`}
+                          // 点击分类跳转到物品库并带上该分类筛选
+                          to={
+                            cat.id === null
+                              ? "/components"
+                              : `/components?categoryId=${cat.id}&sort=quantity_desc`
+                          }
+                          aria-label={`查看分类 ${cat.name}`}
+                          style={{ color: "inherit", textDecoration: "none" }}
+                        >
+                          <Flex align="center" gap={8} style={{ width: "100%" }}>
+                            <span style={{ width: 8, height: 8, borderRadius: 2, background: color, flexShrink: 0 }} />
+                            <span style={{ flex: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                              {cat.name}
+                            </span>
+                            <Typography.Text type="secondary" style={{ fontSize: 12, flexShrink: 0 }}>
+                              ×{cat.quantity}（{pct}%）
+                            </Typography.Text>
+                          </Flex>
+                        </Link>
                       );
                     })}
                   </Flex>
@@ -141,31 +164,38 @@ export default function DashboardPage() {
               ) : (
                 <Flex vertical gap={8}>
                   {data!.lowStock.map((l) => (
-                    <Flex key={l.id} align="center" gap={8}>
-                      <Typography.Text ellipsis style={{ width: "42%", flexShrink: 0 }}>
-                        {l.name}
-                      </Typography.Text>
-                      <div
-                        style={{
-                          flex: 1,
-                          height: 6,
-                          borderRadius: 3,
-                          background: token.colorFillSecondary,
-                          overflow: "hidden",
-                        }}
-                      >
+                    <Link
+                      key={l.id}
+                      to={`/components?q=${encodeURIComponent(l.name)}`}
+                      aria-label={`查看 ${l.name}`}
+                      style={{ color: "inherit", textDecoration: "none" }}
+                    >
+                      <Flex align="center" gap={8}>
+                        <Typography.Text ellipsis style={{ width: "42%", flexShrink: 0 }}>
+                          {l.name}
+                        </Typography.Text>
                         <div
                           style={{
-                            width: `${(l.quantity / maxLow) * 100}%`,
-                            height: "100%",
-                            background: token.colorPrimary,
+                            flex: 1,
+                            height: 6,
+                            borderRadius: 3,
+                            background: token.colorFillSecondary,
+                            overflow: "hidden",
                           }}
-                        />
-                      </div>
-                      <Typography.Text style={{ width: 36, textAlign: "right", fontSize: 12, flexShrink: 0 }}>
-                        ×{l.quantity}
-                      </Typography.Text>
-                    </Flex>
+                        >
+                          <div
+                            style={{
+                              width: `${(l.quantity / maxLow) * 100}%`,
+                              height: "100%",
+                              background: token.colorPrimary,
+                            }}
+                          />
+                        </div>
+                        <Typography.Text style={{ width: 36, textAlign: "right", fontSize: 12, flexShrink: 0 }}>
+                          ×{l.quantity}
+                        </Typography.Text>
+                      </Flex>
+                    </Link>
                   ))}
                 </Flex>
               )}
@@ -180,33 +210,40 @@ export default function DashboardPage() {
           ) : (
             <Flex vertical gap={8}>
               {data!.recent.map((r) => (
-                <Flex key={r.id} align="center" gap={8}>
-                  {r.imagePath ? (
-                    <Image
-                      src={r.imagePath}
-                      width={28}
-                      height={28}
-                      style={{ objectFit: "cover", borderRadius: 4, flexShrink: 0 }}
-                      preview={false}
-                    />
-                  ) : (
-                    <span style={{ width: 28, height: 28, borderRadius: 4, background: token.colorFillSecondary, flexShrink: 0 }} />
-                  )}
-                  <Flex vertical style={{ flex: 1, minWidth: 0 }}>
-                    <Typography.Text ellipsis style={{ lineHeight: 1.3 }}>
-                      {r.name}
-                    </Typography.Text>
-                    <Typography.Text type="secondary" style={{ fontSize: 12, lineHeight: 1.3 }}>
-                      {r.categoryName ?? "未分类"} · {formatMoney(r.price)}
-                    </Typography.Text>
+                <Link
+                  key={r.id}
+                  to={`/components?q=${encodeURIComponent(r.name)}`}
+                  aria-label={`查看 ${r.name}`}
+                  style={{ color: "inherit", textDecoration: "none" }}
+                >
+                  <Flex align="center" gap={8}>
+                    {r.imagePath ? (
+                      <Image
+                        src={r.imagePath}
+                        width={28}
+                        height={28}
+                        style={{ objectFit: "cover", borderRadius: 4, flexShrink: 0 }}
+                        preview={false}
+                      />
+                    ) : (
+                      <span style={{ width: 28, height: 28, borderRadius: 4, background: token.colorFillSecondary, flexShrink: 0 }} />
+                    )}
+                    <Flex vertical style={{ flex: 1, minWidth: 0 }}>
+                      <Typography.Text ellipsis style={{ lineHeight: 1.3 }}>
+                        {r.name}
+                      </Typography.Text>
+                      <Typography.Text type="secondary" style={{ fontSize: 12, lineHeight: 1.3 }}>
+                        {r.categoryName ?? "未分类"} · {formatMoney(r.price)}
+                      </Typography.Text>
+                    </Flex>
+                    <span style={{ flexShrink: 0 }}>
+                      <Typography.Text strong>×{r.quantity}</Typography.Text>
+                      <Typography.Text type="secondary" style={{ fontSize: 12, marginLeft: 8 }}>
+                        {formatTime(r.updatedAt)}
+                      </Typography.Text>
+                    </span>
                   </Flex>
-                  <span style={{ flexShrink: 0 }}>
-                    <Typography.Text strong>×{r.quantity}</Typography.Text>
-                    <Typography.Text type="secondary" style={{ fontSize: 12, marginLeft: 8 }}>
-                      {formatTime(r.updatedAt)}
-                    </Typography.Text>
-                  </span>
-                </Flex>
+                </Link>
               ))}
             </Flex>
           )}

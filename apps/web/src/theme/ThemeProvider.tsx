@@ -26,7 +26,11 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     localStorage.setItem(STORAGE_KEY, mode);
-    document.documentElement.style.colorScheme = mode;
+    const root = document.documentElement;
+    root.style.colorScheme = mode;
+    // 与 antd colorBgLayout 一致，切换主题时同步首屏背景
+    root.style.backgroundColor = mode === "dark" ? "#000000" : "#f5f5f5";
+    root.style.color = mode === "dark" ? "rgba(255, 255, 255, 0.85)" : "rgba(0, 0, 0, 0.88)";
   }, [mode]);
 
   const toggle = useCallback(() => {

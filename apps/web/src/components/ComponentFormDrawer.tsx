@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   Button,
   Drawer,
@@ -7,6 +7,7 @@ import {
   Image,
   Input,
   InputNumber,
+  Modal,
   message,
   Radio,
   Select,
@@ -49,10 +50,14 @@ export default function ComponentFormDrawer({ open, editing, onClose, onSaved }:
   const isMobile = !screens.md;
   const [form] = Form.useForm<FormValues>();
   const [messageApi, contextHolder] = message.useMessage();
+  // 静态 Modal.confirm 不读取 ConfigProvider 主题，改用 hook 实例跟随深浅色
+  const [modalApi, modalHolder] = Modal.useModal();
   const [imagePath, setImagePath] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
   const [categorySearch, setCategorySearch] = useState("");
   const isCreate = editing === null;
+  /** 打开时的表单与图片快照，关闭前对比值是否真的变过（仅聚焦/失焦不算改动） */
+  const initialSnapshot = useRef("");
 
   const queryClient = useQueryClient();
   const { data: catData } = useQuery({
@@ -97,6 +102,9 @@ export default function ComponentFormDrawer({ open, editing, onClose, onSaved }:
           }
         : { name: "", quantity: 0, priceMode: "unit" },
     );
+    // 记录初始快照，供关闭前脏检查
+    initialSnapshot.current =
+      JSON.stringify(form.getFieldsValue()) + "|" + (editing?.imagePath ?? "");
   }, [open, editing, form]);
 
   const createCategory = useMutation({
@@ -165,6 +173,24 @@ export default function ComponentFormDrawer({ open, editing, onClose, onSaved }:
     });
   };
 
+  /** 关闭前检查表单值与图片是否有实际变化，避免误触遮罩/Esc 丢失输入 */
+  const requestClose = () => {
+    const dirty =
+      JSON.stringify(form.getFieldsValue()) + "|" + (imagePath ?? "") !== initialSnapshot.current;
+    if (!dirty) {
+      onClose();
+      return;
+    }
+    modalApi.confirm({
+      title: "放弃未保存的修改？",
+      content: "关闭后本次填写的内容将丢失",
+      okText: "放弃修改",
+      okButtonProps: { danger: true },
+      cancelText: "继续编辑",
+      onOk: () => onClose(),
+    });
+  };
+
   const uploadImage = async (file: File) => {
     setUploading(true);
     try {
@@ -186,11 +212,11 @@ export default function ComponentFormDrawer({ open, editing, onClose, onSaved }:
     <Drawer
       title={isCreate ? "新建物品" : "编辑物品"}
       open={open}
-      onClose={onClose}
+      onClose={requestClose}
       width={isMobile ? "100%" : 480}
       footer={
         <div style={{ display: "flex", justifyContent: "flex-end", gap: 8 }}>
-          <Button onClick={onClose}>取消</Button>
+          <Button onClick={requestClose}>取消</Button>
           <Button type="primary" loading={save.isPending} onClick={() => form.submit()}>
             保存
           </Button>
@@ -198,6 +224,7 @@ export default function ComponentFormDrawer({ open, editing, onClose, onSaved }:
       }
     >
       {contextHolder}
+      {modalHolder}
       <Form form={form} layout="vertical" onFinish={handleSubmit}>
         <Form.Item
           name="name"

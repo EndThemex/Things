@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   Button,
   Modal,
@@ -47,11 +47,15 @@ export default function PlanEditor({ open, editing, onClose, onSaved }: Props) {
   const isMobile = !screens.md;
   const [form] = Form.useForm<FormValues>();
   const [messageApi, contextHolder] = message.useMessage();
+  // 静态 Modal.confirm 不读取 ConfigProvider 主题，改用 hook 实例跟随深浅色
+  const [modalApi, modalHolder] = Modal.useModal();
   const [items, setItems] = useState<EditorItem[]>([]);
   const [pickId, setPickId] = useState<number | undefined>();
   const [pickQty, setPickQty] = useState<number>(1);
   const [q, setQ] = useState("");
   const isCreate = editing === null;
+  /** 打开时的初始快照，用于关闭前判断是否有未保存修改 */
+  const initialSnapshot = useRef("");
 
   const queryClient = useQueryClient();
   const { data: compData } = useQuery({
@@ -82,6 +86,12 @@ export default function PlanEditor({ open, editing, onClose, onSaved }: Props) {
     setPickId(undefined);
     setPickQty(1);
     setQ("");
+    // 记录初始快照，供关闭前脏检查
+    initialSnapshot.current = JSON.stringify({
+      name: editing?.name ?? "",
+      description: editing?.description ?? "",
+      items: (editing?.items ?? []).map((i) => [i.componentId, i.quantityPer]),
+    });
   }, [open, editing, form]);
 
   const save = useMutation({
@@ -113,6 +123,27 @@ export default function PlanEditor({ open, editing, onClose, onSaved }: Props) {
     },
     onError: (e) => messageApi.error(e.message),
   });
+
+  /** 关闭前脏检查：名称/描述被编辑或明细有变动时二次确认，避免误触遮罩/Esc 丢失输入 */
+  const requestClose = () => {
+    const current = JSON.stringify({
+      name: form.getFieldValue("name") ?? "",
+      description: form.getFieldValue("description") ?? "",
+      items: items.map((i) => [i.componentId, i.quantityPer]),
+    });
+    if (current === initialSnapshot.current) {
+      onClose();
+      return;
+    }
+    modalApi.confirm({
+      title: "放弃未保存的修改？",
+      content: "关闭后本次编辑的内容将丢失",
+      okText: "放弃修改",
+      okButtonProps: { danger: true },
+      cancelText: "继续编辑",
+      onOk: () => onClose(),
+    });
+  };
 
   const addItem = () => {
     if (pickId === undefined) return;
@@ -146,7 +177,7 @@ export default function PlanEditor({ open, editing, onClose, onSaved }: Props) {
     <Modal
       title={isCreate ? "新建方案" : "编辑方案"}
       open={open}
-      onCancel={onClose}
+      onCancel={requestClose}
       width={isMobile ? "100%" : 640}
       style={{ top: isMobile ? 8 : 60 }}
       styles={{
@@ -159,7 +190,7 @@ export default function PlanEditor({ open, editing, onClose, onSaved }: Props) {
       }}
       footer={
         <div style={{ display: "flex", justifyContent: "flex-end", gap: 8 }}>
-          <Button onClick={onClose}>取消</Button>
+          <Button onClick={requestClose}>取消</Button>
           <Button type="primary" loading={save.isPending} onClick={() => form.submit()}>
             保存
           </Button>
@@ -167,6 +198,7 @@ export default function PlanEditor({ open, editing, onClose, onSaved }: Props) {
       }
     >
       {contextHolder}
+      {modalHolder}
       <Form form={form} layout="vertical" onFinish={(v) => save.mutate(v)}>
         <Form.Item
           name="name"

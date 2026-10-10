@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Button, Card, Col, Empty, Flex, Grid, Row, Space, Spin, Tag, Typography, message, theme } from "antd";
 import { ExperimentOutlined, ImportOutlined, PlusOutlined } from "@ant-design/icons";
 import { useQuery } from "@tanstack/react-query";
-import { useNavigate } from "react-router";
+import { Link, useNavigate } from "react-router";
 import { api } from "../api/client";
 import type { PlanDetail, PlanSummary } from "../types";
 import { formatMoney, formatTime } from "../utils/format";
@@ -68,12 +68,16 @@ export default function PlansPage() {
           <Row gutter={[12, 12]}>
             {plans.map((p) => (
               <Col xs={24} md={12} key={p.id}>
+                <Link
+                  to={`/plans/${p.id}`}
+                  style={{ display: "block", height: "100%", color: "inherit" }}
+                  aria-label={`打开方案 ${p.name}`}
+                >
                 <Card
                   size="small"
                   hoverable
                   style={{ height: "100%" }}
                   styles={{ body: { padding: 12, height: "100%", display: "flex", flexDirection: "column" } }}
-                  onClick={() => navigate(`/plans/${p.id}`)}
                 >
                   <Flex vertical gap={6} style={{ height: "100%" }}>
                     <Flex justify="space-between" align="center" gap={8}>
@@ -105,6 +109,7 @@ export default function PlansPage() {
                     </Flex>
                   </Flex>
                 </Card>
+                </Link>
               </Col>
             ))}
           </Row>
