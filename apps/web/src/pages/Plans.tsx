@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Button, Card, Col, Empty, Flex, Grid, Row, Space, Spin, Tag, Typography, message, theme } from "antd";
+import { Button, Card, Col, Empty, Flex, Grid, Row, Space, Spin, Typography, message, theme } from "antd";
 import { ExperimentOutlined, ImportOutlined, PlusOutlined } from "@ant-design/icons";
 import { useQuery } from "@tanstack/react-query";
 import { Link, useNavigate } from "react-router";
@@ -8,12 +8,7 @@ import type { PlanDetail, PlanSummary } from "../types";
 import { formatMoney, formatTime } from "../utils/format";
 import PlanEditor from "../components/PlanEditor";
 import PlanBomImport from "../components/PlanBomImport";
-
-function FeasibleBadge({ feasible }: { feasible: number | null }) {
-  if (feasible === null) return <Tag>无明细</Tag>;
-  if (feasible === 0) return <Tag color="error">无法制作</Tag>;
-  return <Tag color="success">可做 {feasible} 份</Tag>;
-}
+import FeasibleBadge from "../components/FeasibleBadge";
 
 export default function PlansPage() {
   const { token } = theme.useToken();

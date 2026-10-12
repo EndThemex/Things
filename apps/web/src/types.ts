@@ -49,6 +49,10 @@ export interface StatsOverview {
     totalQuantity: number;
     /** 总价值（元，两位小数字符串） */
     totalValue: string;
+    /** 分类数 */
+    categoryCount: number;
+    /** 零库存物品种类数 */
+    zeroStock: number;
   };
   categoryDistribution: {
     id: number | null;
@@ -56,7 +60,35 @@ export interface StatsOverview {
     kinds: number;
     quantity: number;
   }[];
+  /** 分类价值分布（value 为元，两位小数字符串） */
+  categoryValueDistribution: {
+    id: number | null;
+    name: string;
+    kinds: number;
+    value: string;
+  }[];
   tagDistribution: { id: number; name: string; count: number }[];
+  /** 库存价值最高 Top10（value 为元，两位小数字符串） */
+  valueTop10: {
+    id: number;
+    name: string;
+    categoryName: string | null;
+    quantity: number;
+    price: string | null;
+    imagePath: string | null;
+    value: string;
+  }[];
+  /** 近 14 天出入库趋势（本地日期，固定 14 项） */
+  movementTrend: { date: string; inbound: number; outbound: number }[];
+  /** 最近出入库流水 */
+  recentMovements: {
+    id: number;
+    componentId: number;
+    componentName: string;
+    delta: number;
+    reason: string | null;
+    createdAt: string;
+  }[];
   lowStock: {
     id: number;
     name: string;
