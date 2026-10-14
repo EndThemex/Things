@@ -84,6 +84,12 @@ const MIGRATIONS: string[] = [
   );
   CREATE INDEX IF NOT EXISTS idx_stock_movements_component ON stock_movements(component_id);
   `,
+  // 002: 列表性能索引（数据量大时加速排序 / 过滤 / 回收站查询）
+  `
+  CREATE INDEX IF NOT EXISTS idx_components_updated ON components(updated_at, id);
+  CREATE INDEX IF NOT EXISTS idx_components_deleted ON components(deleted_at);
+  CREATE INDEX IF NOT EXISTS idx_stock_movements_created ON stock_movements(created_at);
+  `,
 ];
 
 export function migrate(database = db) {

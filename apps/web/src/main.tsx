@@ -12,7 +12,14 @@ import PlansPage from "./pages/Plans";
 import PlanDetailPage from "./pages/PlanDetail";
 
 const queryClient = new QueryClient({
-  defaultOptions: { queries: { retry: 1, refetchOnWindowFocus: false } },
+  defaultOptions: {
+    queries: {
+      retry: 1,
+      refetchOnWindowFocus: false,
+      // 缓存 30 秒内视为新鲜，页面间切换不重复请求；变更后各接口通过 invalidateQueries 主动失效
+      staleTime: 30_000,
+    },
+  },
 });
 
 /** 路由切换时回顶，避免从长列表进入新页面残留上一页的滚动位置 */

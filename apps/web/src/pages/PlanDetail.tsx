@@ -172,7 +172,8 @@ export default function PlanDetailPage() {
     {
       title: "物品",
       dataIndex: "name",
-      width: 220,
+      // 物品列固定较窄宽度，剩余空间由「需要量」列（未设宽度）吸收，避免按比例分摊导致本列过宽
+      width: 140,
       render: (_, r) => (
         <Flex gap={8} align="center">
           {r.imagePath ? (
@@ -192,21 +193,21 @@ export default function PlanDetailPage() {
         </Flex>
       ),
     },
-    { title: "单份用量", dataIndex: "quantityPer", width: 80, align: "right" },
-    { title: "当前库存", dataIndex: "quantity", width: 80, align: "right" },
-    { title: `需要量（${copies} 份）`, dataIndex: "need", width: 110, align: "right" },
+    { title: "单份用量", dataIndex: "quantityPer", width: 70, align: "right" },
+    { title: "当前库存", dataIndex: "quantity", width: 70, align: "right" },
+    { title: `需要量（${copies} 份）`, dataIndex: "need", width: 80, align: "right" },
     {
       title: "缺少量",
       dataIndex: "shortage",
-      width: 80,
+      width: 60,
       align: "right",
       render: (v: number) => (v > 0 ? <Typography.Text type="danger">-{v}</Typography.Text> : "0"),
     },
-    { title: "单价", dataIndex: "price", width: 80, align: "right", render: (v: string | null) => formatMoney(v) },
+    { title: "单价", dataIndex: "price", width: 50, align: "right", render: (v: string | null) => formatMoney(v) },
     {
       title: "小计",
       key: "subtotal",
-      width: 90,
+      width: 80,
       align: "right",
       render: (_, r) => (r.price === null ? "-" : `¥${round2(r.quantityPer * Number(r.price)).toFixed(2)}`),
     },
@@ -336,6 +337,8 @@ export default function PlanDetailPage() {
             dataSource={tableRows}
             pagination={false}
             scroll={{ x: 720 }}
+            // 显式固定布局，否则 rc-table 默认 auto 布局，列宽由内容决定，column.width 不生效
+            tableLayout="fixed"
             locale={{ emptyText: <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description="暂无明细，点击右上角「编辑」添加" /> }}
           />
         </Card>

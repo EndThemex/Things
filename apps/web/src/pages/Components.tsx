@@ -196,33 +196,27 @@ export default function ComponentsPage() {
     queryClient.invalidateQueries({ queryKey: ["feasibility"] });
   };
 
+  // 回收站服务端分页（页码为本地状态，与物品列表 URL 页码互不影响）
+  const [trashPage, setTrashPage] = useState(1);
   const { data: trashData, isLoading: trashLoading } = useQuery({
-    queryKey: ["components", "trash"],
-    queryFn: () => api<{ items: TrashItem[] }>("/components/trash"),
+    queryKey: ["components", "trash", trashPage],
+    queryFn: () => api<Paged<TrashItem>>(`/components/trash?page=${trashPage}&pageSize=20`),
     enabled: view === "trash",
+    // 翻页时保留上一页数据，避免表格闪空
+    placeholderData: keepPreviousData,
   });
 
-  const quickAdjust = useMutation({
-    mutationFn: ({ id, delta }: { id: number; delta: number }) =>
-      api(`/components/${id}/quantity`, { method: "PATCH", ...json({ delta, reason: "快捷调整" }) }),
-    onSuccess: invalidateAll,
-    onError: (e) => messageApi.error(e.message),
-  });
-
-  const remove = useMutation({
-    mutationFn: (id: number) => api(`/components/${id}`, { method: "DELETE" }),
-    onSuccess: () => {
-      messageApi.success("已移入回收站");
-      invalidateAll();
-    },
-    onError: (e) => messageApi.error(e.message),
-  });
+  /** 回收站当前页删空时回退一页（仅在非首页且页内只剩刚删的那条时触发） */
+  const maybeBackTrashPage = () => {
+    if ((trashData?.items.length ?? 0) <= 1 && trashPage > 1) setTrashPage((p) => p - 1);
+  };
 
   const restore = useMutation({
     mutationFn: (id: number) => api(`/components/${id}/restore`, { method: "POST" }),
     onSuccess: () => {
       messageApi.success("已还原");
       invalidateAll();
+      maybeBackTrashPage();
     },
     onError: (e) => messageApi.error(e.message),
   });
@@ -231,6 +225,50 @@ export default function ComponentsPage() {
     mutationFn: (id: number) => api(`/components/${id}/hard`, { method: "DELETE" }),
     onSuccess: () => {
       messageApi.success("已彻底删除");
+      invalidateAll();
+      maybeBackTrashPage();
+    },
+    onError: (e) => messageApi.error(e.message),
+  });
+
+  const quickAdjust = useMutation({
+    mutationFn: ({ id, delta }: { id: number; delta: number }) =>
+      api(`/components/${id}/quantity`, { method: "PATCH", ...json({ delta, reason: "快捷调整" }) }),
+    // 乐观更新：先取消在途的列表重拉，再直接改缓存，数字点击后立即生效
+    onMutate: async ({ id, delta }) => {
+      await queryClient.cancelQueries({ queryKey: ["components"] });
+      const snapshots = queryClient.getQueriesData<{ items: { id: number; quantity: number }[] }>({
+        queryKey: ["components"],
+      });
+      for (const [key, data] of snapshots) {
+        if (!data) continue;
+        queryClient.setQueryData(key, {
+          ...data,
+          items: data.items.map((it) => (it.id === id ? { ...it, quantity: it.quantity + delta } : it)),
+        });
+      }
+      return { snapshots };
+    },
+    // 数量变化只影响列表与统计/方案摘要；分类、标签缓存与之无关，不失效
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["components"] });
+      queryClient.invalidateQueries({ queryKey: ["stats"] });
+      queryClient.invalidateQueries({ queryKey: ["plans"] });
+      queryClient.invalidateQueries({ queryKey: ["plan"] });
+      queryClient.invalidateQueries({ queryKey: ["feasibility"] });
+    },
+    onError: (e, _vars, ctx) => {
+      // 失败回滚到调整前快照，并重拉列表对账
+      for (const [key, data] of ctx?.snapshots ?? []) queryClient.setQueryData(key, data);
+      queryClient.invalidateQueries({ queryKey: ["components"] });
+      messageApi.error(e.message);
+    },
+  });
+
+  const remove = useMutation({
+    mutationFn: (id: number) => api(`/components/${id}`, { method: "DELETE" }),
+    onSuccess: () => {
+      messageApi.success("已移入回收站");
       invalidateAll();
     },
     onError: (e) => messageApi.error(e.message),
@@ -293,6 +331,7 @@ export default function ComponentsPage() {
         src={item.imagePath}
         width={size}
         height={size}
+        loading="lazy"
         style={{ objectFit: "cover", borderRadius: token.borderRadius }}
       />
     ) : (
@@ -371,7 +410,8 @@ export default function ComponentsPage() {
     {
       title: "分类",
       dataIndex: "categoryName",
-      width: 100,
+      // 百分比宽度：随表格变宽而变大，但比例受限，名称仍占主要空间
+      width: "14%",
       render: (v: string | null) =>
         v ?? <Typography.Text type="secondary">未分类</Typography.Text>,
     },
@@ -498,7 +538,8 @@ export default function ComponentsPage() {
     {
       title: "分类",
       dataIndex: "categoryName",
-      width: 100,
+      // 百分比宽度：随表格变宽而变大，但比例受限，名称仍占主要空间
+      width: "12%",
       render: (v: string | null) =>
         v ?? <Typography.Text type="secondary">未分类</Typography.Text>,
     },
@@ -630,14 +671,26 @@ export default function ComponentsPage() {
           columns={trashColumns}
           dataSource={trashData?.items ?? []}
           scroll={{ x: 720 }}
-          pagination={false}
+          pagination={{
+            current: trashPage,
+            pageSize: 20,
+            total: trashData?.total ?? 0,
+            onChange: setTrashPage,
+            showTotal: (t) => `共 ${t} 件`,
+            size: "default",
+          }}
           locale={{ emptyText: <Empty description="回收站为空" image={Empty.PRESENTED_IMAGE_SIMPLE} /> }}
         />
       )}
       {(trashData?.items.length ?? 0) > 0 && (
-        <Typography.Text type="secondary" style={{ fontSize: 12, display: "block", marginTop: 8 }}>
-          回收站物品保留 30 天后自动清理；彻底删除将同时清除图片与流水，不可恢复
-        </Typography.Text>
+        <>
+          <Flex justify="flex-end" style={{ marginTop: 12 }}>
+            <Pagination data={trashData} onChange={setTrashPage} />
+          </Flex>
+          <Typography.Text type="secondary" style={{ fontSize: 12, display: "block", marginTop: 8 }}>
+            回收站物品保留 30 天后自动清理；彻底删除将同时清除图片与流水，不可恢复
+          </Typography.Text>
+        </>
       )}
     </>
   );
@@ -800,7 +853,7 @@ function Pagination({
   data,
   onChange,
 }: {
-  data?: Paged<ComponentItem>;
+  data?: { total: number; page: number; pageSize: number };
   onChange: (page: number) => void;
 }) {
   if (!data || data.total <= data.pageSize) return null;

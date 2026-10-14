@@ -242,7 +242,24 @@ componentRoutes.get("/", async (c) => {
 
 // ---------- 回收站列表 ----------
 
+const trashQuerySchema = z.object({
+  page: z.coerce.number().int().min(1).default(1),
+  pageSize: z.coerce.number().int().min(1).max(100).default(20),
+});
+
 componentRoutes.get("/trash", async (c) => {
+  const parsed = trashQuerySchema.safeParse({
+    page: c.req.query("page") || undefined,
+    pageSize: c.req.query("pageSize") || undefined,
+  });
+  if (!parsed.success) return c.json({ error: "参数错误" }, 400);
+  const { page, pageSize } = parsed.data;
+
+  const [{ total }] = await db
+    .select({ total: sql<number>`count(*)` })
+    .from(components)
+    .where(isNotNull(components.deletedAt));
+
   const rows = await db
     .select({
       id: components.id,
@@ -257,14 +274,16 @@ componentRoutes.get("/trash", async (c) => {
     .from(components)
     .leftJoin(categories, eq(categories.id, components.categoryId))
     .where(isNotNull(components.deletedAt))
-    .orderBy(desc(components.deletedAt), desc(components.id));
+    .orderBy(desc(components.deletedAt), desc(components.id))
+    .limit(pageSize)
+    .offset((page - 1) * pageSize);
   const items = rows.map((r) => {
     const elapsedDays = r.deletedAt
       ? Math.floor((Date.now() - new Date(r.deletedAt).getTime()) / 86400000)
       : 0;
     return { ...r, daysLeft: Math.max(0, TRASH_RETENTION_DAYS - elapsedDays) };
   });
-  return c.json({ items });
+  return c.json({ items, total, page, pageSize });
 });
 
 // ---------- 还原 ----------

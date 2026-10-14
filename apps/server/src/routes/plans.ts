@@ -1,9 +1,9 @@
 import { Hono } from "hono";
 import { z } from "zod";
-import { asc, desc, eq, inArray, isNull } from "drizzle-orm";
+import { asc, desc, eq, inArray, isNull, sql } from "drizzle-orm";
 import { db } from "../db";
 import { categories, components, planItems, plans, stockMovements } from "../db/schema";
-import { calcFeasibleCopies, calcPlan, type PlanCalcItem } from "../services/plan";
+import { calcPlan, type PlanCalcItem } from "../services/plan";
 import { normalizePrice, round2 } from "../services/price";
 import { HEADER_ALIASES, parseCsv } from "./backup";
 
@@ -57,40 +57,32 @@ planRoutes.get("/", async (c) => {
     .from(plans)
     .orderBy(desc(plans.updatedAt), desc(plans.id));
 
-  // 一次取全部明细（仅关联未删除物品，回收站物品不参与方案计算）
-  const itemRows = await db
+  // 摘要聚合下沉 SQL：一次 GROUP BY 算出每个方案的数量/可行份数/成本/缺料，
+  // 避免把全部明细拉进内存逐个计算（仅关联未删除物品，回收站物品不参与方案计算）
+  const summaryRows = await db
     .select({
       planId: planItems.planId,
-      quantityPer: planItems.quantityPer,
-      quantity: components.quantity,
-      price: components.price,
+      itemCount: sql<number>`count(*)`,
+      // 可行份数 = min(floor(库存 ÷ 单份用量))；两侧均为整数列，SQLite 整数除法即 floor
+      feasible: sql<number>`min(cast(${components.quantity} / ${planItems.quantityPer} as integer))`,
+      totalCost1: sql<number>`coalesce(sum(${planItems.quantityPer} * coalesce(cast(${components.price} as real), 0)), 0)`,
+      shortageCount: sql<number>`coalesce(sum(case when ${components.quantity} < ${planItems.quantityPer} then 1 else 0 end), 0)`,
     })
     .from(planItems)
     .innerJoin(components, eq(components.id, planItems.componentId))
-    .where(isNull(components.deletedAt));
-
-  const grouped = new Map<number, { quantityPer: number; quantity: number; price: string | null }[]>();
-  for (const r of itemRows) {
-    const list = grouped.get(r.planId) ?? [];
-    list.push(r);
-    grouped.set(r.planId, list);
-  }
+    .where(isNull(components.deletedAt))
+    .groupBy(planItems.planId);
+  const summaryMap = new Map(summaryRows.map((r) => [r.planId, r]));
 
   return c.json({
     items: planRows.map((p) => {
-      const rows = grouped.get(p.id) ?? [];
-      const calcItems: PlanCalcItem[] = rows.map((r) => ({
-        componentId: 0,
-        quantityPer: r.quantityPer,
-        quantity: r.quantity,
-        price: r.price === null ? null : Number(r.price),
-      }));
+      const s = summaryMap.get(p.id);
       return {
         ...p,
-        itemCount: rows.length,
-        feasible: calcFeasibleCopies(calcItems),
-        totalCost1: money(round2(rows.reduce((s, r) => s + r.quantityPer * (r.price === null ? 0 : Number(r.price)), 0))),
-        shortageCount: rows.filter((r) => r.quantityPer > r.quantity).length, // 目标 1 份时的缺料物品数
+        itemCount: s ? Number(s.itemCount) : 0,
+        feasible: s ? Number(s.feasible) : null, // 无明细时为 null，与前端约定一致
+        totalCost1: money(round2(s ? Number(s.totalCost1) : 0)),
+        shortageCount: s ? Number(s.shortageCount) : 0, // 目标 1 份时的缺料物品数
       };
     }),
   });
