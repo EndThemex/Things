@@ -153,7 +153,7 @@ export default function PlanDetailPage() {
 
   if (planQ.isError) {
     return (
-      <Flex vertical gap={12}>
+      <Flex vertical gap={16}>
         <Button type="text" icon={<ArrowLeftOutlined />} onClick={() => navigate("/plans")} style={{ alignSelf: "flex-start" }}>
           返回方案列表
         </Button>
@@ -227,7 +227,7 @@ export default function PlanDetailPage() {
   return (
     <Spin spinning={planQ.isLoading}>
       {contextHolder}
-      <Flex vertical gap={12}>
+      <Flex vertical gap={16}>
         <Flex gap={4} align="center">
           <Button type="text" icon={<ArrowLeftOutlined />} onClick={() => navigate("/plans")} aria-label="返回" />
           <Flex vertical style={{ flex: 1, minWidth: 0 }}>
@@ -305,21 +305,21 @@ export default function PlanDetailPage() {
         )}
 
         {/* 目标份数 + 汇总 */}
-        <Card size="small" styles={{ body: { padding: 12 } }}>
+        <Card styles={{ body: { padding: 16 } }}>
           <Flex gap={12} wrap="wrap" align="center">
             <Flex align="center" gap={8}>
               <Typography.Text>目标份数</Typography.Text>
               <InputNumber min={1} precision={0} value={copies} onChange={(v) => setCopies(v ?? 1)} style={{ width: 90 }} />
             </Flex>
           </Flex>
-          <Row gutter={[8, 8]} style={{ marginTop: 12 }}>
+          <Row gutter={[12, 12]} style={{ marginTop: 16 }}>
             {summaryCards.map((s) => (
               <Col xs={12} md={6} key={s.title}>
-                <div style={{ background: token.colorFillQuaternary, borderRadius: token.borderRadius, padding: "8px 12px" }}>
+                <div style={{ background: token.colorFillQuaternary, borderRadius: token.borderRadiusLG, padding: "10px 14px" }}>
                   <Typography.Text type="secondary" style={{ fontSize: 12 }}>
                     {s.title}
                   </Typography.Text>
-                  <div style={{ fontSize: 18, fontWeight: 700, lineHeight: 1.4, color: s.color }}>
+                  <div style={{ fontSize: 20, fontWeight: 700, lineHeight: 1.4, fontVariantNumeric: "tabular-nums", color: s.color }}>
                     {s.value}
                   </div>
                 </div>

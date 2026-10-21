@@ -182,20 +182,26 @@ export default function DashboardPage() {
 
   return (
     <Spin spinning={isLoading}>
-      <Flex vertical gap={12}>
+      <Flex vertical gap={16}>
         {/* 概览卡片：移动端 2 列、平板 3 列、桌面 6 列，字号自适应防溢出 */}
-        <Row gutter={12}>
+        <Row gutter={[16, 16]}>
           {statCards.map((s) => (
             <Col xs={12} sm={8} md={4} key={s.title}>
-              <Card size="small" styles={{ body: { padding: "10px 8px" } }}>
+              <Card
+                size="small"
+                // 告警项用浅色底 + 描边从均匀卡片中跳出，扫一眼即可定位问题
+                style={s.alert ? { borderColor: token.colorErrorBorder, background: token.colorErrorBg } : undefined}
+                styles={{ body: { padding: "14px 14px 12px" } }}
+              >
                 <Typography.Text type="secondary" style={{ fontSize: 12 }}>
                   {s.title}
                 </Typography.Text>
                 <div
                   style={{
-                    fontSize: "clamp(15px, 5vw, 22px)",
+                    fontSize: "clamp(17px, 5vw, 24px)",
                     fontWeight: 700,
-                    lineHeight: 1.3,
+                    lineHeight: 1.35,
+                    fontVariantNumeric: "tabular-nums",
                     overflow: "hidden",
                     textOverflow: "ellipsis",
                     whiteSpace: "nowrap",
@@ -209,10 +215,10 @@ export default function DashboardPage() {
           ))}
         </Row>
 
-        <Row gutter={12}>
+        <Row gutter={[16, 16]}>
           {/* 近 14 天出入库趋势 */}
           <Col xs={24} lg={16}>
-            <Card size="small" title="近 14 天出入库趋势">
+            <Card size="small" styles={{ body: { padding: 16 } }} title="近 14 天出入库趋势">
               <Flex vertical gap={4}>
                 <Flex gap={12} align="center" style={{ fontSize: 12, color: token.colorTextSecondary }}>
                   <span style={{ display: "inline-flex", alignItems: "center", gap: 4 }}>
@@ -236,7 +242,7 @@ export default function DashboardPage() {
 
           {/* 方案概览 */}
           <Col xs={24} lg={8}>
-            <Card size="small" title="方案概览">
+            <Card size="small" styles={{ body: { padding: 16 } }} title="方案概览">
               {plansLoading ? (
                 <Spin size="small" />
               ) : plans.length === 0 ? (
@@ -280,10 +286,10 @@ export default function DashboardPage() {
           </Col>
         </Row>
 
-        <Row gutter={12}>
+        <Row gutter={[16, 16]}>
           {/* 分类数量分布（饼图） */}
           <Col xs={24} lg={12}>
-            <Card size="small" title="分类数量分布">
+            <Card size="small" styles={{ body: { padding: 16 } }} title="分类数量分布">
               {pieData.length === 0 ? (
                 <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description="暂无物品" />
               ) : (
@@ -325,7 +331,7 @@ export default function DashboardPage() {
 
           {/* 数量最少 Top10 */}
           <Col xs={24} lg={12}>
-            <Card size="small" title="数量最少 Top10">
+            <Card size="small" styles={{ body: { padding: 16 } }} title="数量最少 Top10">
               {(data?.lowStock ?? []).length === 0 ? (
                 <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description="暂无物品" />
               ) : (
@@ -370,10 +376,10 @@ export default function DashboardPage() {
           </Col>
         </Row>
 
-        <Row gutter={12}>
+        <Row gutter={[16, 16]}>
           {/* 分类价值分布 */}
           <Col xs={24} lg={12}>
-            <Card size="small" title="分类价值分布">
+            <Card size="small" styles={{ body: { padding: 16 } }} title="分类价值分布">
               {categoryValue.length === 0 ? (
                 <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description="暂无物品" />
               ) : (
@@ -429,7 +435,7 @@ export default function DashboardPage() {
 
           {/* 库存价值最高 Top10 */}
           <Col xs={24} lg={12}>
-            <Card size="small" title="库存价值 Top10">
+            <Card size="small" styles={{ body: { padding: 16 } }} title="库存价值 Top10">
               {valueTop.length === 0 ? (
                 <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description="暂无计价物品" />
               ) : (
@@ -490,10 +496,10 @@ export default function DashboardPage() {
           </Col>
         </Row>
 
-        <Row gutter={12}>
+        <Row gutter={[16, 16]}>
           {/* 标签分布 */}
           <Col xs={24} lg={12}>
-            <Card size="small" title="标签分布">
+            <Card size="small" styles={{ body: { padding: 16 } }} title="标签分布">
               {(data?.tagDistribution ?? []).length === 0 ? (
                 <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description="暂无标签" />
               ) : (
@@ -518,7 +524,7 @@ export default function DashboardPage() {
 
           {/* 最近出入库流水 */}
           <Col xs={24} lg={12}>
-            <Card size="small" title="最近出入库">
+            <Card size="small" styles={{ body: { padding: 16 } }} title="最近出入库">
               {(data?.recentMovements ?? []).length === 0 ? (
                 <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description="暂无出入库记录" />
               ) : (
@@ -558,7 +564,7 @@ export default function DashboardPage() {
         </Row>
 
         {/* 最近修改 */}
-        <Card size="small" title="最近修改">
+        <Card size="small" styles={{ body: { padding: 16 } }} title="最近修改">
           {(data?.recent ?? []).length === 0 ? (
             <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description="暂无物品" />
           ) : (

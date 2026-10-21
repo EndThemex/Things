@@ -427,6 +427,7 @@ export default function ComponentsPage() {
       title: "单价",
       dataIndex: "price",
       width: 80,
+      align: "right" as const,
       sorter: true,
       sortOrder: sortOrderFor(sort, "price"),
       render: (v: string | null) => formatMoney(v),
@@ -466,7 +467,7 @@ export default function ComponentsPage() {
   ];
 
   const filterBar = (
-    <Flex gap={8} wrap="wrap" style={{ marginBottom: 12 }}>
+    <Flex gap={8} wrap="wrap" style={{ marginBottom: 16 }}>
       <Input.Search
         placeholder="搜索名称 / 规格"
         allowClear
@@ -611,7 +612,7 @@ export default function ComponentsPage() {
                 vertical
                 gap={8}
                 style={{
-                  padding: 10,
+                  padding: 12,
                   borderRadius: token.borderRadiusLG,
                   border: `1px solid ${token.colorBorderSecondary}`,
                 }}
@@ -696,7 +697,7 @@ export default function ComponentsPage() {
   );
 
   return (
-    <Card styles={{ body: { padding: 12 } }}>
+    <Card styles={{ body: { padding: isMobile ? 12 : 16 } }}>
       {contextHolder}
       <Tabs
         size="small"

@@ -1,5 +1,5 @@
 import { useEffect, useRef } from "react";
-import { Layout, Menu, Grid, Button, Typography, theme } from "antd";
+import { Layout, Menu, Grid, Button, Flex, Typography, theme } from "antd";
 import {
   AppstoreOutlined,
   DashboardOutlined,
@@ -50,34 +50,55 @@ export default function AppLayout() {
     // 应用壳布局：整体占满视口，侧边栏与顶栏固定，仅内容区滚动
     <Layout style={{ height: "100dvh" }}>
       {!isMobile && (
-        <Sider width={160} theme="light" style={{ overflowY: "auto" }}>
-          <div style={{ fontWeight: 700, padding: "12px 16px" }}>Things</div>
-          <Menu mode="inline" {...menuProps} style={{ borderInlineEnd: "none" }} />
+        <Sider width={208} theme="light" style={{ overflowY: "auto", borderInlineEnd: `1px solid ${token.colorSplit}` }}>
+          {/* 品牌区：主色圆角图标 + 名称 */}
+          <Flex align="center" gap={10} style={{ padding: "16px 16px 12px" }}>
+            <Flex
+              align="center"
+              justify="center"
+              style={{
+                width: 32,
+                height: 32,
+                borderRadius: 9,
+                background: `linear-gradient(135deg, ${token.colorPrimary}, ${token.colorPrimaryActive})`,
+                color: "#fff",
+                fontSize: 17,
+                flexShrink: 0,
+              }}
+            >
+              <AppstoreOutlined />
+            </Flex>
+            <Flex vertical>
+              <span style={{ fontWeight: 700, fontSize: 16, lineHeight: 1.2 }}>Things</span>
+              <span style={{ fontSize: 11, color: token.colorTextSecondary, lineHeight: 1.4 }}>物品库存管理</span>
+            </Flex>
+          </Flex>
+          <Menu mode="inline" {...menuProps} style={{ borderInlineEnd: "none", paddingInline: 8 }} />
         </Sider>
       )}
       <Layout>
         <Header
           style={{
-            background: "transparent",
-            padding: "0 12px",
+            background: token.colorBgContainer,
+            borderBottom: `1px solid ${token.colorSplit}`,
+            padding: isMobile ? "0 12px" : "0 16px",
             display: "flex",
             alignItems: "center",
-            height: 44,
-            lineHeight: "44px",
-            gap: 8,
+            height: 52,
+            lineHeight: "52px",
+            gap: 10,
           }}
         >
-          {isMobile && <span style={{ fontWeight: 700, fontSize: 15 }}>Things</span>}
+          {isMobile && <span style={{ fontWeight: 700, fontSize: 16 }}>Things</span>}
           <Typography.Text
-            type="secondary"
-            style={{ fontSize: 13, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}
+            strong
+            style={{ fontSize: 15, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}
           >
             {pageTitle}
           </Typography.Text>
           <span style={{ flex: 1 }} />
           <Button
             type="text"
-            size="small"
             shape="circle"
             icon={mode === "dark" ? <SunOutlined /> : <MoonOutlined />}
             onClick={toggle}
@@ -85,7 +106,14 @@ export default function AppLayout() {
           />
         </Header>
         <Content ref={contentRef} style={{ overflowY: "auto" }}>
-          <div style={{ padding: "0 12px 12px", maxWidth: 1200, width: "100%", margin: "0 auto" }}>
+          <div
+            style={{
+              padding: isMobile ? "12px 12px 24px" : "16px 20px 32px",
+              maxWidth: 1200,
+              width: "100%",
+              margin: "0 auto",
+            }}
+          >
             <Outlet />
           </div>
         </Content>
@@ -97,7 +125,7 @@ export default function AppLayout() {
               display: "flex",
               borderTop: `1px solid ${token.colorSplit}`,
               background: token.colorBgContainer,
-              paddingBottom: "env(safe-area-inset-bottom)",
+              paddingBottom: "calc(4px + env(safe-area-inset-bottom))",
             }}
           >
             {NAV_ITEMS.map((item) => {
@@ -115,15 +143,18 @@ export default function AppLayout() {
                     flexDirection: "column",
                     alignItems: "center",
                     gap: 2,
-                    padding: "6px 0 4px",
+                    margin: "4px 6px 0",
+                    padding: "5px 0 3px",
                     fontSize: 12,
                     border: "none",
-                    background: "transparent",
-                    color: selected ? token.colorPrimary : token.colorText,
+                    borderRadius: 10,
+                    background: selected ? token.colorFillQuaternary : "transparent",
+                    color: selected ? token.colorPrimary : token.colorTextSecondary,
                     cursor: "pointer",
+                    transition: "background 0.2s, color 0.2s",
                   }}
                 >
-                  <span style={{ fontSize: 16, lineHeight: 1 }}>{item.icon}</span>
+                  <span style={{ fontSize: 17, lineHeight: 1 }}>{item.icon}</span>
                   <span>{item.label}</span>
                 </button>
               );

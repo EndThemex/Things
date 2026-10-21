@@ -29,7 +29,7 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
     const root = document.documentElement;
     root.style.colorScheme = mode;
     // 与 antd colorBgLayout 一致，切换主题时同步首屏背景
-    root.style.backgroundColor = mode === "dark" ? "#000000" : "#f5f5f5";
+    root.style.backgroundColor = mode === "dark" ? "#000000" : "#f5f6f8";
     root.style.color = mode === "dark" ? "rgba(255, 255, 255, 0.85)" : "rgba(0, 0, 0, 0.88)";
   }, [mode]);
 
@@ -43,13 +43,19 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
     <ThemeContext.Provider value={value}>
       <ConfigProvider
         locale={zhCN}
-        componentSize="small"
         theme={{
           algorithm: mode === "dark" ? antdTheme.darkAlgorithm : antdTheme.defaultAlgorithm,
           token: {
             colorPrimary: "#1677ff",
-            borderRadius: 6,
-            fontSize: 13,
+            borderRadius: 8,
+            borderRadiusLG: 12,
+            fontSize: 14,
+            colorBgLayout: mode === "dark" ? "#000000" : "#f5f6f8",
+            fontFamily:
+              "-apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif",
+          },
+          components: {
+            Card: { paddingLG: 20 },
           },
         }}
       >

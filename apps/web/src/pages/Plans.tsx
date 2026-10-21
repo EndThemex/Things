@@ -28,29 +28,18 @@ export default function PlansPage() {
   const plans = data?.items ?? [];
 
   return (
-    <Flex vertical gap={12}>
+    <Flex vertical gap={16}>
       {contextHolder}
-      <Flex justify="space-between" align="center">
-        <Typography.Title level={5} style={{ margin: 0 }}>
-          方案
-        </Typography.Title>
+      {/* 页面标题由顶栏展示，这里只保留操作区 */}
+      <Flex justify="flex-end">
         <Space>
-          <Button
-            size="small"
-            icon={<ImportOutlined />}
-            onClick={() => setBomOpen(true)}
-          >
+          <Button icon={<ImportOutlined />} onClick={() => setBomOpen(true)}>
             导入 BOM
           </Button>
-          <Button
-            type="primary"
-            size="small"
-            icon={<PlusOutlined />}
-            onClick={() => {
-              setEditing(null);
-              setEditorOpen(true);
-            }}
-          >
+          <Button type="primary" icon={<PlusOutlined />} onClick={() => {
+            setEditing(null);
+            setEditorOpen(true);
+          }}>
             新建方案
           </Button>
         </Space>
@@ -60,7 +49,7 @@ export default function PlansPage() {
         {plans.length === 0 ? (
           <Empty description="还没有方案，点击「新建方案」创建" style={{ padding: "48px 0" }} />
         ) : (
-          <Row gutter={[12, 12]}>
+          <Row gutter={[16, 16]}>
             {plans.map((p) => (
               <Col xs={24} md={12} key={p.id}>
                 <Link
@@ -69,12 +58,11 @@ export default function PlansPage() {
                   aria-label={`打开方案 ${p.name}`}
                 >
                 <Card
-                  size="small"
                   hoverable
                   style={{ height: "100%" }}
-                  styles={{ body: { padding: 12, height: "100%", display: "flex", flexDirection: "column" } }}
+                  styles={{ body: { padding: 16, height: "100%", display: "flex", flexDirection: "column" } }}
                 >
-                  <Flex vertical gap={6} style={{ height: "100%" }}>
+                  <Flex vertical gap={8} style={{ height: "100%" }}>
                     <Flex justify="space-between" align="center" gap={8}>
                       <Typography.Text strong ellipsis style={{ flex: 1 }}>
                         {p.name}
